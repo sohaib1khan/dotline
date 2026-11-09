@@ -7,6 +7,7 @@ from app.models.bugs import BugReport
 from app.models.content import Lesson, Unit
 from app.models.gamification import Badge, GameScore, LessonProgress, Streak, UserBadge, XpEvent
 from app.models.messaging import Message
+from app.models.session import SessionRecord
 from app.models.settings import AppSetting
 from app.models.user import User, UserSetting, UserTrack
 
@@ -16,6 +17,7 @@ __all__ = [
     "UserTrack",
     "EmailToken",
     "LoginEvent",
+    "SessionRecord",
     "AppSetting",
     "Unit",
     "Lesson",

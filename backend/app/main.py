@@ -5,17 +5,29 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.middleware.setup_gate import SetupGateMiddleware
+from app.routers import admin_settings as admin_settings_router
+from app.routers import auth as auth_router
 from app.routers import setup as setup_router
+from app.security.rate_limit import limiter
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Dotline", version="0.1.0")
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
     app.add_middleware(SetupGateMiddleware)
+
     app.include_router(setup_router.router)
+    app.include_router(auth_router.router)
+    app.include_router(admin_settings_router.router)
 
     @app.get("/api/health")
     def health() -> dict[str, str]:
