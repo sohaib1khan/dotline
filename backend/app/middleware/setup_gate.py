@@ -16,12 +16,19 @@ _ALLOWED_PREFIXES = (
     "/api/bootstrap",
     "/api/public/",
     "/api/health",
+    # Frontend always fetches CSRF before any mutating call (including first-admin setup).
+    "/api/auth/csrf",
+    "/api/auth/me",
     "/assets/",
+    "/icons/",
 )
 _ALLOWED_EXACT = {
     "/favicon.ico",
     "/manifest.webmanifest",
     "/robots.txt",
+    "/logo.svg",
+    "/logo.png",
+    "/sw.js",
 }
 
 

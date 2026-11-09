@@ -26,16 +26,18 @@ Self-hosted Progressive Web App. Open source. Runs in Docker.
 ## Quick start (Docker)
 
 ```bash
+git clone https://github.com/sohaib1khan/dotline.git
+cd dotline
 cp .env.example .env
 ```
 
-Generate secrets and put them in `.env`:
+Generate real secrets and put them in `.env` (do not leave the `change_me` placeholders):
 
 ```bash
 # SECRET_KEY
 python3 -c "import secrets; print(secrets.token_urlsafe(48))"
 
-# APP_ENCRYPTION_KEY (Fernet)
+# APP_ENCRYPTION_KEY (Fernet — must be a valid Fernet key)
 python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
@@ -45,10 +47,12 @@ If `cryptography` is not installed yet:
 pip install cryptography
 ```
 
-Start:
+Also set `PUBLIC_BASE_URL` to your real URL (for email links), e.g. `https://dotline.example.com`.
+
+Start in the background:
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
 Open [http://localhost:47391](http://localhost:47391) (or `DOTLINE_PORT` from `.env`).
