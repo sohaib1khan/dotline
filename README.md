@@ -28,37 +28,27 @@ Self-hosted Progressive Web App. Open source. Runs in Docker.
 ```bash
 git clone https://github.com/sohaib1khan/dotline.git
 cd dotline
-cp .env.example .env
+./scripts/bootstrap.sh --url https://dotline.example.com
 ```
 
-Generate real secrets and put them in `.env` (do not leave the `change_me` placeholders):
+That script:
+
+1. Creates `.env` from `.env.example` if needed
+2. Generates `SECRET_KEY`, `APP_ENCRYPTION_KEY`, and `POSTGRES_PASSWORD` (skips keys that are already set)
+3. Sets `PUBLIC_BASE_URL` from `--url`
+4. Runs `docker compose up -d --build` and waits for `/api/health`
+
+Useful flags:
 
 ```bash
-# SECRET_KEY
-python3 -c "import secrets; print(secrets.token_urlsafe(48))"
-
-# APP_ENCRYPTION_KEY (Fernet — must be a valid Fernet key)
-python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+./scripts/bootstrap.sh --url https://dotline.example.com --port 47391
+./scripts/bootstrap.sh --env-only --url https://dotline.example.com   # write .env only
+./scripts/bootstrap.sh --force-secrets                               # rotate secrets (breaks existing encrypted data / DB password unless volumes are reset)
 ```
 
-If `cryptography` is not installed yet:
-
-```bash
-pip install cryptography
-```
-
-Also set `PUBLIC_BASE_URL` to your real URL (for email links), e.g. `https://dotline.example.com`.
-
-Start in the background:
-
-```bash
-docker compose up -d --build
-```
-
-Open [http://localhost:47391](http://localhost:47391) (or `DOTLINE_PORT` from `.env`).
+Then open `/setup` to create the first admin (empty DB redirects there automatically).
 
 - Health: `/api/health`
-- First visit with an empty DB redirects to `/setup` to create the admin
 - The Postgres container has **no published host port**
 
 Point Nginx Proxy Manager (or similar) at `host:${DOTLINE_PORT}`.
