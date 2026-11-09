@@ -16,6 +16,7 @@ from app.routers import admin_settings as admin_settings_router
 from app.routers import auth as auth_router
 from app.routers import bootstrap as bootstrap_router
 from app.routers import cursive as cursive_router
+from app.routers import games as games_router
 from app.routers import lessons as lessons_router
 from app.routers import me as me_router
 from app.routers import setup as setup_router
@@ -43,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(statusboard_router.router)
     app.include_router(lessons_router.router)
     app.include_router(cursive_router.router)
+    app.include_router(games_router.router)
     app.include_router(admin_settings_router.router)
     app.include_router(admin_debug_router.router)
 

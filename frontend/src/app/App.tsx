@@ -12,6 +12,8 @@ import { CursiveLessonPage } from "@/pages/CursiveLessonPage";
 import { CursiveTrackPage } from "@/pages/CursiveTrackPage";
 import { EntryGatePage } from "@/pages/EntryGatePage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
+import { GamePlayPage } from "@/pages/GamePlayPage";
+import { GamesPage } from "@/pages/GamesPage";
 import { InputDebugPage } from "@/pages/InputDebugPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
@@ -46,10 +48,8 @@ export function App() {
               <Route path="/app/cursive" element={<CursiveTrackPage />} />
               <Route path="/app/cursive/lessons/:lessonId" element={<CursiveLessonPage />} />
               <Route path="/app/cursive/signature" element={<SignatureStudioPage />} />
-              <Route
-                path="/app/games"
-                element={<StubPage title="Games" copy="Games arrive in Phase 9." />}
-              />
+              <Route path="/app/games" element={<GamesPage />} />
+              <Route path="/app/games/:gameKey" element={<GamePlayPage />} />
               <Route
                 path="/app/progress"
                 element={<StubPage title="Progress" copy="Progress page arrives in Phase 10." />}

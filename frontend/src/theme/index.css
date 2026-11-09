@@ -847,3 +847,96 @@ kbd {
   cursor: crosshair;
   justify-self: center;
 }
+
+.game-panel {
+  display: grid;
+  gap: 0.7rem;
+  min-height: 0;
+}
+
+.dot-drop-stage {
+  position: relative;
+  height: min(40dvh, 280px);
+  border: 2px solid var(--color-border);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-panel) 90%, #000);
+}
+
+.dot-drop-letter {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 3rem;
+  min-height: 3rem;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--color-accent);
+  border-radius: 0.75rem;
+  background: var(--color-surface-2);
+  font-size: 1.6rem;
+}
+
+.match-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+}
+
+.match-card {
+  min-height: 6.5rem;
+  border: 3px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-panel);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.match-card.is-matched {
+  border-color: var(--color-success);
+}
+
+.match-letter {
+  font-size: 2rem;
+}
+
+.lantern-game {
+  background:
+    radial-gradient(circle at top, #142033 0%, transparent 55%);
+}
+
+.lantern-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.lantern {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 3px solid var(--color-border);
+  background: transparent;
+}
+
+.lantern.is-lit {
+  background: #fbbf24;
+  border-color: #f59e0b;
+  box-shadow: 0 0 16px #f59e0b;
+}
+
+.thread-preview {
+  height: 0.9rem;
+  border: 2px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-surface-2);
+}
+
+.thread-preview > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), #fbbf24);
+}
