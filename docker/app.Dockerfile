@@ -22,7 +22,8 @@ COPY backend/pyproject.toml ./
 COPY backend/app ./app
 COPY backend/alembic ./alembic
 COPY backend/alembic.ini ./alembic.ini
-RUN pip install .
+RUN pip install --upgrade pip \
+    && pip install .
 
 COPY --from=frontend-build /frontend/dist ./static
 COPY docker/entrypoint.sh /entrypoint.sh

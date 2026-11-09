@@ -1,10 +1,29 @@
 # Dotline
 
-Learn **braille** and **cursive** — made for low vision.
+Learn **braille** (English UEB Grade 1) and **cursive** — designed **low-vision first**.
 
-Self-hosted web app (installable as a PWA). Open source. Runs in Docker.
+Self-hosted Progressive Web App. Open source. Runs in Docker.
 
-## Quick start
+## Features
+
+- Braille track with YAML-seeded units and Learn / Write / Read / Review lessons
+- Cursive track with stroke library, 2D/3D tracing, and Signature Studio
+- Games: Dot Drop, Cell Match, Lantern Path, Word Weaver
+- XP, levels, streaks, badges, progress reset, settings (theme / speech / haptics)
+- Inbox, Report a Problem (with device context), admin replies
+- Admin: users, content CMS, bugs, announcements, settings, monitoring, login log
+- PWA: installable, offline lesson practice, queued progress sync
+
+### Screenshots
+
+> Placeholders — add real captures under `docs/screenshots/` when ready.
+
+- Statusboard — daily goal, XP, continue lessons
+- Braille lesson — six-dot pad + feedback
+- Cursive tracing — 2D / 3D guide
+- Admin monitoring — drag-and-drop widgets
+
+## Quick start (Docker)
 
 ```bash
 cp .env.example .env
@@ -20,25 +39,97 @@ python3 -c "import secrets; print(secrets.token_urlsafe(48))"
 python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-If you do not have `cryptography` installed yet:
+If `cryptography` is not installed yet:
 
 ```bash
 pip install cryptography
 ```
 
-Then:
+Start:
 
 ```bash
 docker compose up --build
 ```
 
-Open [http://localhost:47391](http://localhost:47391). Health check: [http://localhost:47391/api/health](http://localhost:47391/api/health).
+Open [http://localhost:47391](http://localhost:47391) (or `DOTLINE_PORT` from `.env`).
 
-Change `DOTLINE_PORT` in `.env` if that port is taken. Point Nginx Proxy Manager at `host:${DOTLINE_PORT}`.
+- Health: `/api/health`
+- First visit with an empty DB redirects to `/setup` to create the admin
+- The Postgres container has **no published host port**
 
-## Status
+Point Nginx Proxy Manager (or similar) at `host:${DOTLINE_PORT}`.
 
-Phase 0 scaffold is in place. Features land in later phases — see `AGENTS.md` for structure and conventions.
+## Roles
+
+| Role | Access |
+|---|---|
+| **admin** | Users, content, bugs, announcements, settings, monitoring, learner view |
+| **learner** | Learn, play, progress, inbox, report problems, settings |
+
+## NPM / frontend notes
+
+The production UI is built inside the Docker image (`docker/app.Dockerfile`). For local UI work:
+
+```bash
+cd frontend
+npm install
+npm run build    # typecheck + Vite production build
+npm run test     # Vitest unit tests (if present)
+```
+
+End-to-end smoke (app must already be running on `DOTLINE_PORT`):
+
+```bash
+cd e2e
+npm install
+npx playwright install chromium
+DOTLINE_BASE_URL=http://localhost:47391 npm test
+```
+
+## Backend tests
+
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+pytest -q
+```
+
+Or inside the running app container:
+
+```bash
+docker compose exec app pip install -e ".[dev]"
+docker compose exec app pytest -q
+```
+
+## Security
+
+Blueprint section 2 checklist (verified in CI/local hardening):
+
+- Secrets only in `.env` (gitignored); `.env.example` has placeholders
+- Passwords hashed with **argon2**
+- Sessions: **httpOnly**, **Secure**, **SameSite=Lax** cookies + CSRF on state-changing requests
+- Rate limits on login, signup, password reset, bug reports
+- Server-side Pydantic validation; admin routes enforced on the server
+- Third-party API keys encrypted with Fernet (`APP_ENCRYPTION_KEY`); masked only to clients
+- `gitleaks` pre-commit hook; run full history: `gitleaks detect --source . --verbose`
+
+Dependency audits:
+
+```bash
+# Python
+cd backend && pip install pip-audit && pip-audit
+
+# Frontend
+cd frontend && npm audit --omit=dev
+```
+
+## Contributing
+
+1. Read `AGENTS.md` and `.cursor/rules/` — accessibility and layout rules always apply.
+2. Do **not** commit `blueprint.md`, `.env`, or secrets.
+3. Prefer small focused PRs; add/update backend tests for service logic you change.
+4. Keep features talking to devices only through `frontend/src/input` and `frontend/src/feedback`.
 
 ## License
 

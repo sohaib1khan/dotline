@@ -1,14 +1,13 @@
 """Inbox and bug report route registration smoke tests."""
 
-from fastapi.routing import APIRoute
-
 from app.main import create_app
 from app.services import bugs as bugs_service
+from app.tests.route_helpers import api_paths
 
 
 def test_inbox_and_bug_routes_registered() -> None:
     app = create_app()
-    paths = {route.path for route in app.routes if isinstance(route, APIRoute)}
+    paths = api_paths(app)
     assert "/api/inbox" in paths
     assert "/api/inbox/unread-count" in paths
     assert "/api/inbox/{message_id}/read" in paths
