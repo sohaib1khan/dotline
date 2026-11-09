@@ -16,6 +16,7 @@ import { GamePlayPage } from "@/pages/GamePlayPage";
 import { GamesPage } from "@/pages/GamesPage";
 import { InputDebugPage } from "@/pages/InputDebugPage";
 import { LoginPage } from "@/pages/LoginPage";
+import { ProgressPage } from "@/pages/ProgressPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { SetupPage } from "@/pages/SetupPage";
@@ -50,10 +51,7 @@ export function App() {
               <Route path="/app/cursive/signature" element={<SignatureStudioPage />} />
               <Route path="/app/games" element={<GamesPage />} />
               <Route path="/app/games/:gameKey" element={<GamePlayPage />} />
-              <Route
-                path="/app/progress"
-                element={<StubPage title="Progress" copy="Progress page arrives in Phase 10." />}
-              />
+              <Route path="/app/progress" element={<ProgressPage />} />
               <Route
                 path="/app/inbox"
                 element={<StubPage title="Inbox" copy="Inbox arrives in Phase 11." />}

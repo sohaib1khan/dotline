@@ -23,8 +23,10 @@ export type UserSettings = {
   reduce_motion: boolean;
   reduced_visuals: boolean;
   volume: number;
+  sfx_enabled: boolean;
   speech_rate: number;
   speech_enabled: boolean;
+  speech_voice: string | null;
   haptics_enabled: boolean;
   haptics_intensity: number;
   handedness: "left" | "right";

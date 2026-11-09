@@ -17,8 +17,10 @@ class UserSettingsPublic(BaseModel):
     reduce_motion: bool
     reduced_visuals: bool
     volume: float
+    sfx_enabled: bool = True
     speech_rate: float
     speech_enabled: bool
+    speech_voice: str | None = None
     haptics_enabled: bool
     haptics_intensity: float
     handedness: Handedness
@@ -34,8 +36,10 @@ class UserSettingsUpdate(BaseModel):
     reduce_motion: bool | None = None
     reduced_visuals: bool | None = None
     volume: float | None = Field(default=None, ge=0, le=1)
+    sfx_enabled: bool | None = None
     speech_rate: float | None = Field(default=None, ge=0.5, le=2)
     speech_enabled: bool | None = None
+    speech_voice: str | None = Field(default=None, max_length=200)
     haptics_enabled: bool | None = None
     haptics_intensity: float | None = Field(default=None, ge=0, le=1)
     handedness: Handedness | None = None

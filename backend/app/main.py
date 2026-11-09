@@ -19,6 +19,7 @@ from app.routers import cursive as cursive_router
 from app.routers import games as games_router
 from app.routers import lessons as lessons_router
 from app.routers import me as me_router
+from app.routers import progress as progress_router
 from app.routers import setup as setup_router
 from app.routers import statusboard as statusboard_router
 from app.routers import tracks as tracks_router
@@ -42,6 +43,7 @@ def create_app() -> FastAPI:
     app.include_router(me_router.router)
     app.include_router(tracks_router.router)
     app.include_router(statusboard_router.router)
+    app.include_router(progress_router.router)
     app.include_router(lessons_router.router)
     app.include_router(cursive_router.router)
     app.include_router(games_router.router)

@@ -1,8 +1,9 @@
 import { useEffect, useId, useState } from "react";
 import { Field, FormStatus, type SubmitHandler } from "@/components/AuthForm";
-import { feedback, getConnectedGamepads, getVoices } from "@/feedback";
+import { feedback, getConnectedGamepads, getVoices, setGamepadMapping } from "@/feedback";
 import { ApiError, apiGet, apiSend } from "@/lib/api";
 import type { UserPublic, UserSettings } from "@/lib/types";
+import { DEFAULT_GAMEPAD_MAPPING, type GamepadMapping } from "@/input/mapping";
 import { useAuth } from "@/store/auth";
 import { usePreferences } from "@/store/preferences";
 import { TEXT_SCALE_OPTIONS, THEME_OPTIONS } from "@/theme/tokens";
@@ -105,11 +106,26 @@ export function SettingsPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const [voices, setVoices] = useState(() => getVoices());
+
   useEffect(() => {
     void apiGet<UserSettings>("/api/me/settings")
-      .then((data) => hydrate(data))
+      .then((data) => {
+        hydrate(data);
+        feedback.setVoice(data.speech_voice);
+        if (data.gamepad_mapping) {
+          setGamepadMapping({ ...DEFAULT_GAMEPAD_MAPPING, ...(data.gamepad_mapping as GamepadMapping) });
+        }
+      })
       .catch(() => undefined);
   }, [hydrate]);
+
+  useEffect(() => {
+    const refresh = () => setVoices(getVoices());
+    refresh();
+    window.speechSynthesis?.addEventListener("voiceschanged", refresh);
+    return () => window.speechSynthesis?.removeEventListener("voiceschanged", refresh);
+  }, []);
 
   useEffect(() => {
     setUsername(user?.username ?? "");
@@ -294,7 +310,7 @@ export function SettingsPage() {
               checked={settings.reduced_visuals}
               onChange={(event) => setSettings({ reduced_visuals: event.target.checked })}
             />{" "}
-            Reduced visuals (turn off 3D later)
+            Reduced visuals (turn off 3D)
           </label>
           <button className="primary-button" type="submit" disabled={busy}>
             Save display
@@ -307,10 +323,13 @@ export function SettingsPage() {
           className="settings-form"
           onSubmit={(event) => {
             event.preventDefault();
+            feedback.setVoice(settings.speech_voice);
             void saveDisplay({
               volume: settings.volume,
+              sfx_enabled: settings.sfx_enabled,
               speech_enabled: settings.speech_enabled,
               speech_rate: settings.speech_rate,
+              speech_voice: settings.speech_voice,
             });
           }}
         >
@@ -326,6 +345,14 @@ export function SettingsPage() {
             value={settings.volume}
             onChange={(event) => setSettings({ volume: Number(event.target.value) })}
           />
+          <label className="field-label">
+            <input
+              type="checkbox"
+              checked={settings.sfx_enabled}
+              onChange={(event) => setSettings({ sfx_enabled: event.target.checked })}
+            />{" "}
+            Sound effects on
+          </label>
           <label className="field-label">
             <input
               type="checkbox"
@@ -346,7 +373,26 @@ export function SettingsPage() {
             value={settings.speech_rate}
             onChange={(event) => setSettings({ speech_rate: Number(event.target.value) })}
           />
-          <p className="meter">Voices available: {getVoices().length || "loading/system default"}</p>
+          <div className="field">
+            <label className="field-label" htmlFor="speech-voice">
+              Voice
+            </label>
+            <select
+              id="speech-voice"
+              className="field-select"
+              value={settings.speech_voice ?? ""}
+              onChange={(event) =>
+                setSettings({ speech_voice: event.target.value ? event.target.value : null })
+              }
+            >
+              <option value="">System default</option>
+              {voices.map((voice) => (
+                <option key={voice.voiceURI} value={voice.voiceURI}>
+                  {voice.name} ({voice.lang})
+                </option>
+              ))}
+            </select>
+          </div>
           <button
             className="secondary-button"
             type="button"
@@ -372,9 +418,12 @@ export function SettingsPage() {
           className="settings-form"
           onSubmit={(event) => {
             event.preventDefault();
+            const mapping = (settings.gamepad_mapping as GamepadMapping | null) ?? DEFAULT_GAMEPAD_MAPPING;
+            setGamepadMapping({ ...DEFAULT_GAMEPAD_MAPPING, ...mapping });
             void saveDisplay({
               haptics_enabled: settings.haptics_enabled,
               haptics_intensity: settings.haptics_intensity,
+              gamepad_mapping: mapping as unknown as Record<string, unknown>,
             });
           }}
         >
@@ -422,8 +471,73 @@ export function SettingsPage() {
           <button className="secondary-button" type="button" onClick={() => feedback.testRumble()}>
             Test rumble
           </button>
+          <h2 className="demo-title">Controller remapping</h2>
+          <p className="meter">
+            <strong>Assign gamepad button indices to braille dots 1–6.</strong>
+          </p>
+          {[1, 2, 3, 4, 5, 6].map((dot) => {
+            const mapping =
+              (settings.gamepad_mapping as GamepadMapping | null) ?? DEFAULT_GAMEPAD_MAPPING;
+            const current =
+              Object.entries(mapping.dots).find(([, value]) => value === dot)?.[0] ??
+              String(
+                Object.entries(DEFAULT_GAMEPAD_MAPPING.dots).find(([, value]) => value === dot)?.[0] ??
+                  0,
+              );
+            return (
+              <div className="field" key={dot}>
+                <label className="field-label" htmlFor={`dot-map-${dot}`}>
+                  Dot {dot} button index
+                </label>
+                <select
+                  id={`dot-map-${dot}`}
+                  className="field-select"
+                  value={current}
+                  onChange={(event) => {
+                    const button = Number(event.target.value);
+                    const base = {
+                      ...DEFAULT_GAMEPAD_MAPPING,
+                      ...((settings.gamepad_mapping as GamepadMapping | null) ?? {}),
+                      dots: {
+                        ...DEFAULT_GAMEPAD_MAPPING.dots,
+                        ...((settings.gamepad_mapping as GamepadMapping | null)?.dots ?? {}),
+                      },
+                    };
+                    const nextDots: Record<number, number> = {};
+                    for (const [key, value] of Object.entries(base.dots)) {
+                      if (value !== dot) nextDots[Number(key)] = value;
+                    }
+                    nextDots[button] = dot;
+                    setSettings({
+                      gamepad_mapping: { ...base, dots: nextDots } as unknown as Record<
+                        string,
+                        unknown
+                      >,
+                    });
+                  }}
+                >
+                  {Array.from({ length: 16 }, (_, index) => (
+                    <option key={index} value={index}>
+                      Button {index}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() =>
+              setSettings({
+                gamepad_mapping: DEFAULT_GAMEPAD_MAPPING as unknown as Record<string, unknown>,
+              })
+            }
+          >
+            Reset mapping to defaults
+          </button>
           <button className="primary-button" type="submit" disabled={busy}>
-            Save haptics
+            Save haptics & mapping
           </button>
         </form>
       ) : null}
