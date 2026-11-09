@@ -90,6 +90,10 @@ export function SignupPage() {
       <AuthShell title="Sign up">
         <div className="banner" role="status">
           <strong>{status.message ?? "Sign-ups are temporarily closed."}</strong>
+          <p>
+            An admin can open sign-ups later from Admin → Settings → Email after configuring
+            Resend.
+          </p>
         </div>
         <p className="auth-links">
           <Link to="/login">Log in</Link>

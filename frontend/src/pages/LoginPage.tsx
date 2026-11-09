@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthShell, Field, FormStatus, type SubmitHandler } from "@/components/AuthForm";
-import { ApiError, apiPost, clearCsrf } from "@/lib/api";
-import type { MeResponse } from "@/lib/types";
+import { ApiError, apiGet, apiPost, clearCsrf } from "@/lib/api";
+import type { MeResponse, UserSettings } from "@/lib/types";
+import { useAuth } from "@/store/auth";
+import { usePreferences } from "@/store/preferences";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const setUser = useAuth((s) => s.setUser);
+  const hydrate = usePreferences((s) => s.hydrate);
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,6 +22,12 @@ export function LoginPage() {
     try {
       const me = await apiPost<MeResponse>("/api/auth/login", { login, password });
       clearCsrf();
+      setUser(me.user);
+      try {
+        hydrate(await apiGet<UserSettings>("/api/me/settings"));
+      } catch {
+        // Keep defaults if settings cannot load yet.
+      }
       if (!me.user.email_verified_at) {
         navigate("/check-email");
         return;
@@ -26,7 +36,7 @@ export function LoginPage() {
         navigate("/admin/settings/email");
         return;
       }
-      navigate("/tracks");
+      navigate("/app");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Login failed.");
     } finally {
@@ -61,6 +71,10 @@ export function LoginPage() {
         <Link to="/forgot-password">Forgot password?</Link>
         {" · "}
         <Link to="/signup">Sign up</Link>
+        <span className="meter">
+          {" "}
+          (learner sign-up opens after an admin configures email)
+        </span>
       </p>
     </AuthShell>
   );

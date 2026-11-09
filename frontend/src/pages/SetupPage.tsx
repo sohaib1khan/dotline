@@ -2,6 +2,9 @@ import { useEffect, useId, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError, apiGet, apiPost } from "@/lib/api";
+import type { MeResponse, UserSettings } from "@/lib/types";
+import { useAuth } from "@/store/auth";
+import { usePreferences } from "@/store/preferences";
 
 type SetupStatus = { needs_setup: boolean };
 type SetupResult = { ok: boolean; redirect_to: string };
@@ -15,6 +18,8 @@ type FieldErrors = Partial<
 
 export function SetupPage() {
   const navigate = useNavigate();
+  const setUser = useAuth((s) => s.setUser);
+  const hydrate = usePreferences((s) => s.hydrate);
   const formId = useId();
   const [loading, setLoading] = useState(true);
   const [gone, setGone] = useState(false);
@@ -78,6 +83,13 @@ export function SetupPage() {
         password,
         confirm_password: confirmPassword,
       });
+      const me = await apiGet<MeResponse>("/api/auth/me");
+      setUser(me.user);
+      try {
+        hydrate(await apiGet<UserSettings>("/api/me/settings"));
+      } catch {
+        // Keep defaults.
+      }
       navigate(result.redirect_to);
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {

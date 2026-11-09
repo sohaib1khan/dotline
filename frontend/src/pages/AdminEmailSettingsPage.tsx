@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Field, FormStatus, type SubmitHandler } from "@/components/AuthForm";
-import { ApiError, apiGet, apiPost, apiPut, clearCsrf } from "@/lib/api";
+import { ApiError, apiGet, apiPost, apiPut } from "@/lib/api";
 
 type EmailSettings = {
   configured: boolean;
@@ -82,34 +82,24 @@ export function AdminEmailSettingsPage() {
     }
   }
 
-  async function logout() {
-    try {
-      await apiPost("/api/auth/logout", {});
-      clearCsrf();
-    } finally {
-      navigate("/login");
-    }
-  }
-
   return (
-    <main className="main-panel setup-panel" aria-labelledby="admin-email-title">
-      <h1 id="admin-email-title" className="brand">
-        Dotline
+    <section aria-labelledby="admin-email-title">
+      <h1 id="admin-email-title" className="page-title">
+        Settings → Email
       </h1>
-      <p className="status">Admin → Settings → Email</p>
 
       <div className="banner" role="status">
-        <strong>Configure Resend here so learners can sign up.</strong>
+        <strong>Resend email can be configured here whenever you are ready.</strong>
         <p>
-          Enter your Resend API key, From name, and From email. The key is encrypted at rest and
-          never shown in full again after saving.
+          Until a Resend API key and From email are saved, learner sign-ups stay closed. The key is
+          encrypted at rest and never shown in full again after saving.
         </p>
       </div>
 
       {!settings ? (
-        <p className="status">Loading…</p>
+        <p className="page-copy">Loading…</p>
       ) : (
-        <form className="setup-form" onSubmit={onSave} noValidate>
+        <form className="settings-form" onSubmit={onSave} noValidate>
           <Field
             id="from_name"
             label="From name"
@@ -185,14 +175,6 @@ export function AdminEmailSettingsPage() {
           </button>
         </form>
       )}
-
-      <p className="auth-links">
-        <Link to="/">Home</Link>
-        {" · "}
-        <button className="linkish" type="button" onClick={() => void logout()}>
-          Log out
-        </button>
-      </p>
-    </main>
+    </section>
   );
 }

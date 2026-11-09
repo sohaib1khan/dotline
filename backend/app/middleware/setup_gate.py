@@ -13,6 +13,7 @@ from app.services import setup as setup_service
 
 _ALLOWED_PREFIXES = (
     "/api/setup",
+    "/api/bootstrap",
     "/api/health",
     "/assets/",
 )

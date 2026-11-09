@@ -12,6 +12,8 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.middleware.setup_gate import SetupGateMiddleware
 from app.routers import admin_settings as admin_settings_router
 from app.routers import auth as auth_router
+from app.routers import bootstrap as bootstrap_router
+from app.routers import me as me_router
 from app.routers import setup as setup_router
 from app.security.rate_limit import limiter
 
@@ -25,8 +27,10 @@ def create_app() -> FastAPI:
     app.add_middleware(SlowAPIMiddleware)
     app.add_middleware(SetupGateMiddleware)
 
+    app.include_router(bootstrap_router.router)
     app.include_router(setup_router.router)
     app.include_router(auth_router.router)
+    app.include_router(me_router.router)
     app.include_router(admin_settings_router.router)
 
     @app.get("/api/health")

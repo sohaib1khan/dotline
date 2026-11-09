@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthShell, FormStatus } from "@/components/AuthForm";
-import { ApiError, apiPost, clearCsrf } from "@/lib/api";
-import type { MeResponse } from "@/lib/types";
+import { ApiError, apiGet, apiPost, clearCsrf } from "@/lib/api";
+import type { MeResponse, UserSettings } from "@/lib/types";
+import { useAuth } from "@/store/auth";
+import { usePreferences } from "@/store/preferences";
 
 export function VerifyEmailPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const setUser = useAuth((s) => s.setUser);
+  const hydrate = usePreferences((s) => s.hydrate);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -19,12 +23,20 @@ export function VerifyEmailPage() {
       try {
         const me = await apiPost<MeResponse>("/api/auth/verify-email", { token });
         clearCsrf();
-        navigate(me.user.role === "admin" ? "/admin/settings/email" : "/tracks", { replace: true });
+        setUser(me.user);
+        try {
+          hydrate(await apiGet<UserSettings>("/api/me/settings"));
+        } catch {
+          // Keep defaults.
+        }
+        navigate(me.user.role === "admin" ? "/admin/settings/email" : "/tracks", {
+          replace: true,
+        });
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Verification failed.");
       }
     })();
-  }, [navigate, params]);
+  }, [hydrate, navigate, params, setUser]);
 
   return (
     <AuthShell title="Verifying email">
