@@ -8,6 +8,8 @@ type PreferencesState = {
   hydrate: (settings: UserSettings) => void;
 };
 
+const STORAGE_KEY = "dotline.guestPreferences";
+
 const DEFAULT_SETTINGS: UserSettings = {
   text_scale: 100,
   theme: "high_contrast_dark",
@@ -22,12 +24,38 @@ const DEFAULT_SETTINGS: UserSettings = {
   gamepad_mapping: null,
 };
 
-function syncDom(settings: UserSettings) {
-  applyDocumentPreferences(settings.theme, settings.text_scale, settings.reduce_motion);
+function loadGuestSettings(): UserSettings {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_SETTINGS;
+    return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<UserSettings>) };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
 }
 
+function syncDom(settings: UserSettings) {
+  applyDocumentPreferences(settings.theme, settings.text_scale, settings.reduce_motion);
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        theme: settings.theme,
+        text_scale: settings.text_scale,
+        reduce_motion: settings.reduce_motion,
+        reduced_visuals: settings.reduced_visuals,
+      }),
+    );
+  } catch {
+    // Ignore quota / private mode failures.
+  }
+}
+
+const initial = loadGuestSettings();
+syncDom(initial);
+
 export const usePreferences = create<PreferencesState>((set, get) => ({
-  settings: DEFAULT_SETTINGS,
+  settings: initial,
   setSettings: (partial) => {
     const next = { ...get().settings, ...partial };
     syncDom(next);

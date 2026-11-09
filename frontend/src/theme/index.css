@@ -433,3 +433,113 @@ html[data-reduce-motion="true"] {
 .stub-card p {
   margin-top: 0.35rem;
 }
+
+.landing-shell {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+.landing-hero {
+  text-align: center;
+}
+
+.landing-brand {
+  margin-bottom: 0.35rem;
+  font-size: clamp(2rem, 7vw, 3.2rem);
+}
+
+.landing-pitch {
+  margin-bottom: 0.75rem;
+  font-size: clamp(1.05rem, 3vw, 1.35rem);
+}
+
+.landing-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  align-items: end;
+}
+
+.landing-controls .field-label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.landing-controls .field-select {
+  min-height: 3rem;
+}
+
+.landing-demo {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.landing-demo-panel {
+  min-height: 0;
+  overflow: auto;
+  border: 2px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-panel) 92%, transparent);
+}
+
+.demo-block {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.demo-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.braille-cell {
+  display: grid;
+  grid-template-columns: repeat(2, 4.5rem);
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.braille-dot {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 999px;
+  border: 3px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.braille-dot.is-on {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.cursive-canvas {
+  width: min(100%, 28rem);
+  max-height: 40dvh;
+  touch-action: none;
+  border: 2px solid var(--color-border);
+  border-radius: 0.75rem;
+  cursor: crosshair;
+  justify-self: center;
+}
+
+kbd {
+  border: 2px solid var(--color-border);
+  border-radius: 0.4rem;
+  padding: 0.1rem 0.4rem;
+  font: inherit;
+  font-weight: 700;
+}

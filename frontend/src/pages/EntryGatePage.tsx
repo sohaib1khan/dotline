@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { apiGet } from "@/lib/api";
+import { LandingPage } from "@/pages/LandingPage";
+import { useAuth } from "@/store/auth";
 
 type BootstrapInfo = { needs_setup: boolean };
 
 export function EntryGatePage() {
+  const user = useAuth((s) => s.user);
+  const loadingAuth = useAuth((s) => s.loading);
   const [needsSetup, setNeedsSetup] = useState<boolean | null>(null);
   const [error, setError] = useState("");
 
@@ -36,7 +40,7 @@ export function EntryGatePage() {
     );
   }
 
-  if (needsSetup === null) {
+  if (needsSetup === null || loadingAuth) {
     return (
       <div className="app-shell">
         <main className="main-panel" aria-busy="true" aria-label="Loading Dotline">
@@ -47,5 +51,13 @@ export function EntryGatePage() {
     );
   }
 
-  return <Navigate to={needsSetup ? "/setup" : "/login"} replace />;
+  if (needsSetup) {
+    return <Navigate to="/setup" replace />;
+  }
+
+  if (user?.email_verified_at) {
+    return <Navigate to={user.role === "admin" ? "/admin" : "/app"} replace />;
+  }
+
+  return <LandingPage />;
 }
