@@ -11,6 +11,7 @@ SKIP_COMPOSE=0
 PUBLIC_BASE_URL_ARG=""
 DOTLINE_PORT_ARG=""
 FORCE_SECRETS=0
+RESET_DB=0
 
 usage() {
   cat <<'EOF'
@@ -22,8 +23,11 @@ Options:
   --url URL           Set PUBLIC_BASE_URL (e.g. https://dotline.example.com)
   --port N            Set DOTLINE_PORT (default from .env.example, usually 47391)
   --env-only          Write/update .env only; do not run docker compose
-  --force-secrets     Regenerate SECRET_KEY, APP_ENCRYPTION_KEY, POSTGRES_PASSWORD
-                      even if they already look set (destructive for existing data)
+  --force-secrets     Regenerate SECRET_KEY and APP_ENCRYPTION_KEY even if set.
+                      Does not change POSTGRES_PASSWORD unless --reset-db is also
+                      passed (Postgres keeps the password from first volume init).
+  --reset-db          Wipe Postgres/app Docker volumes, then generate a new
+                      POSTGRES_PASSWORD. Destroys all Dotline data.
   -h, --help          Show this help
 
 Environment:
@@ -50,6 +54,10 @@ while [[ $# -gt 0 ]]; do
       FORCE_SECRETS=1
       shift
       ;;
+    --reset-db)
+      RESET_DB=1
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -63,7 +71,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ ! -f "$EXAMPLE_FILE" ]]; then
-  echo "Missing $EXAMPLE_FILE — run this from a Dotline checkout." >&2
+  echo "Missing $EXAMPLE_FILE — run this from the Dotline repo root (or scripts/../)." >&2
   exit 1
 fi
 
@@ -166,9 +174,63 @@ ensure_secret() {
   fi
 }
 
+compose_project_name() {
+  local name=""
+  if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+    name="$(
+      docker compose config --format json 2>/dev/null \
+        | python3 -c 'import json,sys; print(json.load(sys.stdin).get("name") or "")' 2>/dev/null \
+        || true
+    )"
+  fi
+  if [[ -z "$name" && -n "${COMPOSE_PROJECT_NAME:-}" ]]; then
+    name="$COMPOSE_PROJECT_NAME"
+  fi
+  if [[ -z "$name" ]]; then
+    name="$(basename "$ROOT")"
+  fi
+  # Compose lowercases project names for volume prefixes.
+  printf '%s' "$name" | tr '[:upper:]' '[:lower:]'
+}
+
+postgres_volume_exists() {
+  command -v docker >/dev/null 2>&1 || return 1
+  local project
+  project="$(compose_project_name)"
+  [[ -n "$project" ]] || return 1
+  docker volume inspect "${project}_postgres_data" >/dev/null 2>&1
+}
+
 ensure_secret SECRET_KEY gen_secret
 ensure_secret APP_ENCRYPTION_KEY gen_fernet
-ensure_secret POSTGRES_PASSWORD gen_password
+
+# Postgres only applies POSTGRES_PASSWORD on first volume init. Changing .env later
+# without wiping the volume causes "password authentication failed".
+pg_pass_current="$(env_get POSTGRES_PASSWORD)"
+volume_present=0
+if postgres_volume_exists; then
+  volume_present=1
+fi
+
+if [[ "$RESET_DB" -eq 1 ]]; then
+  new_pg="$(gen_password)"
+  env_set POSTGRES_PASSWORD "$new_pg"
+  echo "Set POSTGRES_PASSWORD (will re-init after volume wipe)"
+elif [[ "$volume_present" -eq 1 ]]; then
+  if is_placeholder "$pg_pass_current"; then
+    echo "Warning: Postgres data volume already exists, but POSTGRES_PASSWORD still" >&2
+    echo "         looks like a placeholder. If the DB was first started with" >&2
+    echo "         change_me, keep that value — do not generate a new password." >&2
+    echo "         Or wipe and re-init: ./scripts/bootstrap.sh --reset-db --url ..." >&2
+  else
+    echo "Kept existing POSTGRES_PASSWORD (Postgres volume already initialized)"
+  fi
+elif is_placeholder "$pg_pass_current" || [[ "$FORCE_SECRETS" -eq 1 ]]; then
+  env_set POSTGRES_PASSWORD "$(gen_password)"
+  echo "Set POSTGRES_PASSWORD"
+else
+  echo "Kept existing POSTGRES_PASSWORD"
+fi
 
 PUBLIC_BASE_URL_VALUE="${PUBLIC_BASE_URL_ARG:-${PUBLIC_BASE_URL:-}}"
 if [[ -n "$PUBLIC_BASE_URL_VALUE" ]]; then
@@ -195,6 +257,9 @@ final_port="${final_port:-47391}"
 final_url="$(env_get PUBLIC_BASE_URL)"
 
 if [[ "$SKIP_COMPOSE" -eq 1 ]]; then
+  if [[ "$RESET_DB" -eq 1 ]]; then
+    echo "Note: --reset-db with --env-only only updated .env; volumes were not wiped." >&2
+  fi
   echo
   echo "Env ready. Start later with: docker compose up -d --build"
   echo "Then open http://localhost:${final_port}/setup (or ${final_url}/setup)"
@@ -209,6 +274,12 @@ fi
 if ! docker compose version >/dev/null 2>&1; then
   echo "docker compose is required (Docker Compose v2 plugin)." >&2
   exit 1
+fi
+
+if [[ "$RESET_DB" -eq 1 ]]; then
+  echo
+  echo "Wiping Dotline Docker volumes (Postgres + app data)..."
+  docker compose down -v
 fi
 
 echo
@@ -230,7 +301,16 @@ if [[ "$ready" -eq 1 ]]; then
   echo "Dotline is up."
 else
   echo "Containers started, but health check did not pass yet." >&2
-  echo "Check: docker compose logs -f app" >&2
+  app_logs="$(docker compose logs --no-color --tail=80 app 2>/dev/null || true)"
+  if echo "$app_logs" | grep -qi 'password authentication failed'; then
+    echo >&2
+    echo "Postgres rejected the password in .env." >&2
+    echo "The DB volume was likely created with a different POSTGRES_PASSWORD earlier." >&2
+    echo "Fresh install (destroys data):" >&2
+    echo "  ./scripts/bootstrap.sh --reset-db --url ${final_url:-https://your.domain}" >&2
+  else
+    echo "Check: docker compose logs -f app" >&2
+  fi
 fi
 
 echo

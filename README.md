@@ -43,8 +43,11 @@ Useful flags:
 ```bash
 ./scripts/bootstrap.sh --url https://dotline.example.com --port 47391
 ./scripts/bootstrap.sh --env-only --url https://dotline.example.com   # write .env only
-./scripts/bootstrap.sh --force-secrets                               # rotate secrets (breaks existing encrypted data / DB password unless volumes are reset)
+./scripts/bootstrap.sh --force-secrets                               # rotate app secrets (not DB password)
+./scripts/bootstrap.sh --reset-db --url https://dotline.example.com   # wipe volumes + new DB password (destroys data)
 ```
+
+Postgres only reads `POSTGRES_PASSWORD` on first volume init. If you already ran Compose once with `change_me`, rotating that value in `.env` alone causes `password authentication failed`. Use `--reset-db` for a clean re-init, or put the original password back.
 
 Then open `/setup` to create the first admin (empty DB redirects there automatically).
 
