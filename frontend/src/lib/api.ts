@@ -59,6 +59,39 @@ export async function apiPut<T>(path: string, body: unknown): Promise<T> {
   return apiSend<T>("PUT", path, body);
 }
 
+/** Multipart POST (do not set Content-Type — browser sets boundary). */
+export async function apiUploadForm<T>(path: string, form: FormData): Promise<T> {
+  const csrf = await ensureCsrf();
+  const response = await fetch(path, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      Accept: "application/json",
+      "X-CSRF-Token": csrf,
+    },
+    body: form,
+  });
+  return parseResponse<T>(response);
+}
+
+export async function downloadAuthenticated(path: string, filename: string): Promise<void> {
+  const response = await fetch(path, {
+    credentials: "include",
+    headers: { Accept: "application/zip, application/octet-stream" },
+  });
+  if (!response.ok) {
+    await parseResponse(response);
+    return;
+  }
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 async function parseResponse<T>(response: Response): Promise<T> {
   const text = await response.text();
   let data: unknown = null;

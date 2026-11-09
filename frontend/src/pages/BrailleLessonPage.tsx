@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { BrandMark } from "@/components/BrandMark";
 import { LessonPlayer, type LessonDetail } from "@/features/braille/LessonPlayer";
 import { ApiError, apiGet } from "@/lib/api";
 
@@ -23,9 +24,12 @@ export function BrailleLessonPage() {
 
   return (
     <section aria-labelledby="braille-lesson-title" className="braille-lesson">
-      <p className="meter">
-        <Link to="/app/braille">← Braille units</Link>
-      </p>
+      <div className="lesson-topbar">
+        <BrandMark to="/app" className="lesson-home-mark" />
+        <p className="meter">
+          <Link to="/app/braille">← Braille units</Link>
+        </p>
+      </div>
       {error ? (
         <p className="field-error" role="alert">
           {error}

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { ApiError, apiGet, apiSend } from "@/lib/api";
 import type { Statusboard } from "@/lib/types";
+import { writeLastRoom, type RoomTrack } from "@/store/room";
 import { useAuth } from "@/store/auth";
 
 function formatActive(seconds: number): string {
@@ -11,11 +12,21 @@ function formatActive(seconds: number): string {
   return `${mins}m ${secs}s today`;
 }
 
-export function StatusboardPage() {
+function isRoomTrack(value: string | undefined): value is RoomTrack {
+  return value === "braille" || value === "cursive";
+}
+
+export function RoomStatusboardPage() {
+  const { track: trackParam } = useParams();
+  const room = isRoomTrack(trackParam) ? trackParam : null;
   const user = useAuth((s) => s.user);
   const [board, setBoard] = useState<Statusboard | null>(null);
   const [error, setError] = useState("");
   const [goalBusy, setGoalBusy] = useState(false);
+
+  useEffect(() => {
+    if (room) writeLastRoom(room);
+  }, [room]);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +44,14 @@ export function StatusboardPage() {
       cancelled = true;
     };
   }, []);
+
+  if (!room) {
+    return <Navigate to="/app" replace />;
+  }
+
+  if (board && !board.tracks.includes(room)) {
+    return <Navigate to="/app" replace />;
+  }
 
   if (board && board.tracks.length === 0) {
     return <Navigate to="/tracks" replace />;
@@ -52,13 +71,19 @@ export function StatusboardPage() {
     }
   }
 
+  const roomLabel = room === "braille" ? "Braille" : "Cursive";
+  const continueTarget = board?.continue_targets.find((target) => target.track === room) ?? null;
+
   return (
     <section aria-labelledby="statusboard-title" className="statusboard">
       <h1 id="statusboard-title" className="page-title">
-        Statusboard
+        {roomLabel} room
       </h1>
       <p className="page-copy">
-        <strong>Welcome{user ? `, ${user.first_name}` : ""}.</strong>
+        <strong>
+          You’re in the {roomLabel} room
+          {user ? `, ${user.first_name}` : ""}. Continue your next lesson below — one step at a time.
+        </strong>
       </p>
       {error ? (
         <p className="field-error" role="alert">
@@ -92,7 +117,9 @@ export function StatusboardPage() {
           <article className="status-card" aria-labelledby="streak-card-title">
             <h2 id="streak-card-title">Streak</h2>
             <p>
-              <strong>{board.streak_current} day{board.streak_current === 1 ? "" : "s"}</strong>
+              <strong>
+                {board.streak_current} day{board.streak_current === 1 ? "" : "s"}
+              </strong>
               {" · "}
               longest {board.streak_longest}
             </p>
@@ -128,14 +155,25 @@ export function StatusboardPage() {
 
           <article className="status-card" aria-labelledby="continue-card-title">
             <h2 id="continue-card-title">Continue</h2>
-            <div className="continue-list">
-              {board.continue_targets.map((target) => (
-                <Link key={target.track} className="primary-button link-button" to={target.path}>
-                  {target.label}
-                </Link>
-              ))}
-            </div>
-            <p className="meter">{board.continue_targets[0]?.hint}</p>
+            {continueTarget ? (
+              <>
+                <div className="continue-list">
+                  <Link className="primary-button link-button" to={continueTarget.path}>
+                    {continueTarget.label}
+                  </Link>
+                </div>
+                <p className="meter">
+                  <strong>{continueTarget.hint}</strong>
+                </p>
+              </>
+            ) : (
+              <p>
+                <strong>Open the {roomLabel} lessons list</strong> to pick your next step.
+              </p>
+            )}
+            <Link className="secondary-button link-button" to={`/app/${room}`}>
+              Browse {roomLabel} lessons
+            </Link>
           </article>
 
           <article className="status-card" aria-labelledby="badges-card-title">

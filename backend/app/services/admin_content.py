@@ -216,5 +216,4 @@ def stroke_library_keys() -> dict[str, list[str]]:
 
 
 def braille_alphabet() -> dict[str, Any]:
-    path = content_seed.CONTENT_ROOT / "braille" / "alphabet.yaml"
-    return content_seed._load_yaml(path)
+    return content_seed.load_braille_alphabet()

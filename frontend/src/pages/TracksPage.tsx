@@ -66,7 +66,7 @@ export function TracksPage() {
   return (
     <AuthShell
       title="What do you want to learn?"
-      subtitle="Pick one or both. You can change this later in Settings."
+      subtitle="Pick Braille, Cursive, or both. Next you will choose a room — one calm space at a time."
     >
       {!loaded ? (
         <p className="status">Loading…</p>
@@ -108,7 +108,7 @@ export function TracksPage() {
             disabled={busy || selected.size === 0}
             onClick={() => void save([...selected])}
           >
-            {busy ? "Saving…" : "Start learning"}
+            {busy ? "Saving…" : "Continue to rooms"}
           </button>
         </div>
       )}

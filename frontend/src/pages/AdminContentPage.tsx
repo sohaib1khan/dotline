@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ApiError, apiGet, apiPost, apiPut } from "@/lib/api";
+import { ApiError, apiGet, apiPost, apiPut, apiUploadForm, downloadAuthenticated } from "@/lib/api";
 
 type LessonItem = {
   id?: string;
@@ -19,6 +19,8 @@ type Lesson = {
   type: string;
   content: {
     instruction?: string;
+    passage?: string;
+    passage_speak?: string;
     items?: LessonItem[];
     pass_score?: number;
   };
@@ -37,6 +39,7 @@ type Unit = {
 };
 
 type Track = "braille" | "cursive";
+type EditorPane = "units" | "lessons" | "editor";
 
 export function AdminContentPage() {
   const [track, setTrack] = useState<Track>("braille");
@@ -53,6 +56,11 @@ export function AdminContentPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [reseedConfirm, setReseedConfirm] = useState("");
+  const [importConfirm, setImportConfirm] = useState("");
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [pane, setPane] = useState<EditorPane>("units");
+  const [packOpen, setPackOpen] = useState(false);
+  const [reseedOpen, setReseedOpen] = useState(false);
 
   const load = useCallback(async () => {
     const data = await apiGet<Unit[]>(`/api/admin/content/units?track=${track}`);
@@ -66,6 +74,7 @@ export function AdminContentPage() {
     setUnitId(null);
     setLessonId(null);
     setDraft(null);
+    setPane("units");
   }, [load]);
 
   useEffect(() => {
@@ -79,10 +88,18 @@ export function AdminContentPage() {
 
   const selectedUnit = units.find((unit) => unit.id === unitId) ?? null;
 
+  function selectUnit(unit: Unit) {
+    setUnitId(unit.id);
+    setLessonId(null);
+    setDraft(null);
+    setPane("lessons");
+  }
+
   function selectLesson(lesson: Lesson) {
     setLessonId(lesson.id);
     setDraft({ ...lesson, content: { ...lesson.content, items: [...(lesson.content.items || [])] } });
     setMessage("");
+    setPane("editor");
   }
 
   async function saveLesson() {
@@ -99,7 +116,7 @@ export function AdminContentPage() {
         is_published: draft.is_published,
       });
       setDraft(saved);
-      setMessage("Lesson saved. Learners will see the change immediately.");
+      setMessage("Lesson saved. Learners see this immediately.");
       await load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Save failed.");
@@ -167,12 +184,72 @@ export function AdminContentPage() {
     setDraft({ ...draft, content: { ...draft.content, items } });
   }
 
+  async function downloadPack() {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      await downloadAuthenticated("/api/admin/content/export", "dotline-course.zip");
+      setMessage("Pack downloaded. Edit the YAML, then upload below.");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not download the course pack.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function uploadPack() {
+    if (!importFile) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const form = new FormData();
+      form.append("confirm", "IMPORT");
+      form.append("pack", importFile);
+      const result = await apiUploadForm<{ message: string }>("/api/admin/content/import", form);
+      setMessage(result.message);
+      setImportConfirm("");
+      setImportFile(null);
+      await load();
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Import failed. Use a Dotline ZIP with braille/ and cursive/ folders.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <section aria-labelledby="admin-content-title">
-      <h1 id="admin-content-title" className="page-title">
-        Content
-      </h1>
-      <p className="lede">Edit units and lessons. Changes apply to learners right away.</p>
+    <section className="admin-page admin-content-page" aria-labelledby="admin-content-title">
+      <header className="admin-page-header">
+        <div>
+          <h1 id="admin-content-title" className="page-title">
+            Course content
+          </h1>
+          <p className="page-copy">
+            <strong>Pick a track, choose a unit, edit a lesson.</strong> Or download a course pack —
+            one <code>course.yaml</code> for braille and one for cursive.
+          </p>
+        </div>
+        <div className="admin-segment" role="tablist" aria-label="Track">
+          {(["braille", "cursive"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={track === value}
+              className={`admin-segment-btn${track === value ? " is-selected" : ""}`}
+              onClick={() => setTrack(value)}
+            >
+              {value === "braille" ? "Braille" : "Cursive"}
+            </button>
+          ))}
+        </div>
+      </header>
 
       {error ? (
         <p className="field-error" role="alert">
@@ -185,52 +262,121 @@ export function AdminContentPage() {
         </div>
       ) : null}
 
-      <div className="cta-row" style={{ justifyContent: "flex-start" }}>
-        {(["braille", "cursive"] as const).map((value) => (
+      <details
+        className="admin-disclosure"
+        open={packOpen}
+        onToggle={(event) => setPackOpen((event.target as HTMLDetailsElement).open)}
+      >
+        <summary className="admin-disclosure-summary">
+          <strong>Course pack</strong>
+          <span>Optional · download, edit YAML, upload</span>
+        </summary>
+        {packOpen ? (
+          <div className="admin-pack-grid">
+            <article className="admin-pack-step">
+              <p className="admin-step-num">1</p>
+              <h2 className="admin-card-title">Download</h2>
+              <p className="page-copy">
+                One ZIP with <strong>braille/course.yaml</strong> and{" "}
+                <strong>cursive/course.yaml</strong> — every unit and lesson in two files.
+              </p>
+              <button type="button" className="primary-button" disabled={busy} onClick={() => void downloadPack()}>
+                {busy ? "Working…" : "Download pack"}
+              </button>
+            </article>
+            <article className="admin-pack-step">
+              <p className="admin-step-num">2</p>
+              <h2 className="admin-card-title">Edit offline</h2>
+              <p className="page-copy">
+                Edit only <code>braille/course.yaml</code> and <code>cursive/course.yaml</code>. Keep{" "}
+                <code>alphabet.yaml</code> / <code>strokes.yaml</code> unless you change those
+                libraries.
+              </p>
+            </article>
+            <article className="admin-pack-step">
+              <p className="admin-step-num">3</p>
+              <h2 className="admin-card-title">Upload</h2>
+              <div className="field">
+                <label className="field-label" htmlFor="pack-file">
+                  ZIP file
+                </label>
+                <input
+                  id="pack-file"
+                  className="field-input"
+                  type="file"
+                  accept=".zip,application/zip"
+                  onChange={(event) => setImportFile(event.target.files?.[0] ?? null)}
+                />
+              </div>
+              <div className="field">
+                <label className="field-label" htmlFor="import-confirm">
+                  Type IMPORT to confirm
+                </label>
+                <input
+                  id="import-confirm"
+                  className="field-input"
+                  value={importConfirm}
+                  onChange={(event) => setImportConfirm(event.target.value)}
+                  autoComplete="off"
+                  placeholder="IMPORT"
+                />
+              </div>
+              <button
+                type="button"
+                className="primary-button"
+                disabled={busy || !importFile || importConfirm !== "IMPORT"}
+                onClick={() => void uploadPack()}
+              >
+                Replace course
+              </button>
+            </article>
+          </div>
+        ) : null}
+      </details>
+
+      <div className="admin-editor-tabs" role="tablist" aria-label="Editor sections">
+        {(
+          [
+            ["units", "1 · Units"],
+            ["lessons", "2 · Lessons"],
+            ["editor", "3 · Edit"],
+          ] as const
+        ).map(([id, label]) => (
           <button
-            key={value}
+            key={id}
             type="button"
-            className={`secondary-button${track === value ? " is-selected" : ""}`}
-            aria-pressed={track === value}
-            onClick={() => setTrack(value)}
+            role="tab"
+            className={`admin-segment-btn${pane === id ? " is-selected" : ""}`}
+            aria-selected={pane === id}
+            onClick={() => setPane(id)}
           >
-            {value}
+            {label}
           </button>
         ))}
       </div>
 
-      <div className="admin-content-grid">
-        <div>
-          <h2 className="field-label">Units</h2>
-          <ul className="inbox-list" aria-label="Units">
+      <div className="admin-content-workspace">
+        <div className={`admin-col${pane === "units" ? " is-active-pane" : ""}`}>
+          <h2 className="admin-col-title">Units</h2>
+          <ul className="admin-pick-list" aria-label="Units">
             {units.map((unit) => (
-              <li key={unit.id}>
-                <button
-                  type="button"
-                  className={`inbox-item${unitId === unit.id ? " is-selected" : ""}`}
-                  onClick={() => {
-                    setUnitId(unit.id);
-                    setLessonId(null);
-                    setDraft(null);
-                  }}
-                >
-                  <span className="inbox-item-title">
-                    <strong>
-                      {unit.order}. {unit.title}
-                    </strong>
-                  </span>
-                  <span className="inbox-item-meta">
-                    {unit.is_published ? "published" : "draft"} · {unit.lessons.length} lessons
+              <li key={unit.id} className={`admin-pick${unitId === unit.id ? " is-selected" : ""}`}>
+                <button type="button" className="admin-pick-main" onClick={() => selectUnit(unit)}>
+                  <strong>
+                    {unit.order}. {unit.title}
+                  </strong>
+                  <span>
+                    {unit.is_published ? "Published" : "Draft"} · {unit.lessons.length} lessons
                   </span>
                 </button>
-                <div className="cta-row" style={{ justifyContent: "flex-start", marginTop: "0.35rem" }}>
-                  <button type="button" className="secondary-button" disabled={busy} onClick={() => void move("unit", unit.id, "up")}>
-                    Up
+                <div className="admin-pick-actions">
+                  <button type="button" className="admin-icon-btn" disabled={busy} onClick={() => void move("unit", unit.id, "up")} aria-label={`Move ${unit.title} up`}>
+                    ↑
                   </button>
-                  <button type="button" className="secondary-button" disabled={busy} onClick={() => void move("unit", unit.id, "down")}>
-                    Down
+                  <button type="button" className="admin-icon-btn" disabled={busy} onClick={() => void move("unit", unit.id, "down")} aria-label={`Move ${unit.title} down`}>
+                    ↓
                   </button>
-                  <button type="button" className="secondary-button" disabled={busy} onClick={() => void toggleUnitPublished(unit)}>
+                  <button type="button" className="admin-chip-btn" disabled={busy} onClick={() => void toggleUnitPublished(unit)}>
                     {unit.is_published ? "Unpublish" : "Publish"}
                   </button>
                 </div>
@@ -239,34 +385,30 @@ export function AdminContentPage() {
           </ul>
         </div>
 
-        <div>
-          <h2 className="field-label">Lessons</h2>
+        <div className={`admin-col${pane === "lessons" ? " is-active-pane" : ""}`}>
+          <h2 className="admin-col-title">Lessons</h2>
           {!selectedUnit ? (
-            <p className="lede">Select a unit.</p>
+            <p className="admin-empty">
+              <strong>Select a unit</strong> to see its lessons.
+            </p>
           ) : (
-            <ul className="inbox-list" aria-label="Lessons">
+            <ul className="admin-pick-list" aria-label="Lessons">
               {selectedUnit.lessons.map((lesson) => (
-                <li key={lesson.id}>
-                  <button
-                    type="button"
-                    className={`inbox-item${lessonId === lesson.id ? " is-selected" : ""}`}
-                    onClick={() => selectLesson(lesson)}
-                  >
-                    <span className="inbox-item-title">
-                      <strong>
-                        {lesson.order}. {lesson.title}
-                      </strong>
-                    </span>
-                    <span className="inbox-item-meta">
-                      {lesson.type} · {lesson.is_published ? "published" : "draft"} · {lesson.xp_reward} XP
+                <li key={lesson.id} className={`admin-pick${lessonId === lesson.id ? " is-selected" : ""}`}>
+                  <button type="button" className="admin-pick-main" onClick={() => selectLesson(lesson)}>
+                    <strong>
+                      {lesson.order}. {lesson.title}
+                    </strong>
+                    <span>
+                      {lesson.type} · {lesson.is_published ? "Published" : "Draft"} · {lesson.xp_reward} XP
                     </span>
                   </button>
-                  <div className="cta-row" style={{ justifyContent: "flex-start", marginTop: "0.35rem" }}>
-                    <button type="button" className="secondary-button" disabled={busy} onClick={() => void move("lesson", lesson.id, "up")}>
-                      Up
+                  <div className="admin-pick-actions">
+                    <button type="button" className="admin-icon-btn" disabled={busy} onClick={() => void move("lesson", lesson.id, "up")} aria-label={`Move ${lesson.title} up`}>
+                      ↑
                     </button>
-                    <button type="button" className="secondary-button" disabled={busy} onClick={() => void move("lesson", lesson.id, "down")}>
-                      Down
+                    <button type="button" className="admin-icon-btn" disabled={busy} onClick={() => void move("lesson", lesson.id, "down")} aria-label={`Move ${lesson.title} down`}>
+                      ↓
                     </button>
                   </div>
                 </li>
@@ -275,12 +417,14 @@ export function AdminContentPage() {
           )}
         </div>
 
-        <div className="inbox-detail">
-          <h2 className="field-label">Lesson editor</h2>
+        <div className={`admin-col admin-col-editor${pane === "editor" ? " is-active-pane" : ""}`}>
+          <h2 className="admin-col-title">Lesson editor</h2>
           {!draft ? (
-            <p className="lede">Select a lesson to edit.</p>
+            <p className="admin-empty">
+              <strong>Select a lesson</strong> to edit title, instruction, and items.
+            </p>
           ) : (
-            <div className="report-form">
+            <div className="admin-editor-form">
               <div className="field">
                 <label className="field-label" htmlFor="lesson-title">
                   Title
@@ -292,16 +436,31 @@ export function AdminContentPage() {
                   onChange={(event) => setDraft({ ...draft, title: event.target.value })}
                 />
               </div>
-              <div className="field">
-                <label className="field-label" htmlFor="lesson-type">
-                  Type
-                </label>
-                <input
-                  id="lesson-type"
-                  className="field-input"
-                  value={draft.type}
-                  onChange={(event) => setDraft({ ...draft, type: event.target.value })}
-                />
+              <div className="admin-editor-row">
+                <div className="field">
+                  <label className="field-label" htmlFor="lesson-type">
+                    Type
+                  </label>
+                  <input
+                    id="lesson-type"
+                    className="field-input"
+                    value={draft.type}
+                    onChange={(event) => setDraft({ ...draft, type: event.target.value })}
+                  />
+                </div>
+                <div className="field">
+                  <label className="field-label" htmlFor="lesson-xp">
+                    XP
+                  </label>
+                  <input
+                    id="lesson-xp"
+                    className="field-input"
+                    type="number"
+                    min={0}
+                    value={draft.xp_reward}
+                    onChange={(event) => setDraft({ ...draft, xp_reward: Number(event.target.value) })}
+                  />
+                </div>
               </div>
               <div className="field">
                 <label className="field-label" htmlFor="lesson-instruction">
@@ -321,73 +480,80 @@ export function AdminContentPage() {
                 />
               </div>
               <div className="field">
-                <label className="field-label" htmlFor="lesson-xp">
-                  XP reward
+                <label className="field-label" htmlFor="lesson-passage">
+                  Story passage (optional)
                 </label>
-                <input
-                  id="lesson-xp"
-                  className="field-input"
-                  type="number"
-                  min={0}
-                  value={draft.xp_reward}
-                  onChange={(event) => setDraft({ ...draft, xp_reward: Number(event.target.value) })}
+                <textarea
+                  id="lesson-passage"
+                  className="field-input field-textarea"
+                  rows={3}
+                  value={draft.content.passage || ""}
+                  onChange={(event) => {
+                    const passage = event.target.value;
+                    setDraft({
+                      ...draft,
+                      content: {
+                        ...draft.content,
+                        passage,
+                        passage_speak: passage || undefined,
+                      },
+                    });
+                  }}
                 />
+                <p className="meter">
+                  <strong>Shown above the items.</strong> Included in course pack export/import.
+                </p>
               </div>
               <button
                 type="button"
-                className={`secondary-button${draft.is_published ? " is-selected" : ""}`}
+                className={`admin-chip-btn${draft.is_published ? " is-selected" : ""}`}
                 aria-pressed={draft.is_published}
                 onClick={() => setDraft({ ...draft, is_published: !draft.is_published })}
               >
                 {draft.is_published ? "Published" : "Draft"}
               </button>
 
-              <h3 className="field-label">Items</h3>
-              <ul className="plain-list">
+              <h3 className="admin-col-title">Items</h3>
+              <ul className="admin-item-list">
+                {(draft.content.items || []).length === 0 ? (
+                  <li>
+                    <strong>No items yet.</strong> Add letters or strokes below.
+                  </li>
+                ) : null}
                 {(draft.content.items || []).map((item, index) => (
                   <li key={`${item.id || item.key || index}-${index}`}>
-                    {item.label || item.key || "item"}{" "}
-                    {item.dots ? `[${item.dots.join(",")}]` : ""}{" "}
-                    <button type="button" className="secondary-button" onClick={() => removeItem(index)}>
+                    <span>
+                      <strong>{item.label || item.key || "item"}</strong>
+                      {item.dots ? ` [${item.dots.join(",")}]` : ""}
+                    </span>
+                    <button type="button" className="admin-chip-btn" onClick={() => removeItem(index)}>
                       Remove
                     </button>
                   </li>
                 ))}
               </ul>
 
-              {track === "braille" ? (
-                <div>
-                  <p className="field-label">Add braille letter</p>
-                  <div className="choice-grid">
-                    {Object.keys(alphabet).map((letter) => (
-                      <button
-                        key={letter}
-                        type="button"
-                        className="secondary-button"
-                        onClick={() => addBrailleLetter(letter)}
-                      >
+              <p className="field-label">{track === "braille" ? "Add braille letter" : "Add cursive stroke"}</p>
+              <div className="admin-key-grid">
+                {track === "braille"
+                  ? Object.keys(alphabet).map((letter) => (
+                      <button key={letter} type="button" className="admin-key-btn" onClick={() => addBrailleLetter(letter)}>
                         {letter}
                       </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <p className="field-label">Add cursive stroke</p>
-                  <div className="choice-grid">
-                    {strokeKeys.warmups.map((key) => (
-                      <button key={key} type="button" className="secondary-button" onClick={() => addCursiveKey(key, "warmup")}>
+                    ))
+                  : [...strokeKeys.warmups, ...strokeKeys.letters].map((key) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className="admin-key-btn"
+                        onClick={() =>
+                          addCursiveKey(key, strokeKeys.warmups.includes(key) ? "warmup" : "letter")
+                        }
+                      >
                         {key}
                       </button>
                     ))}
-                    {strokeKeys.letters.map((key) => (
-                      <button key={key} type="button" className="secondary-button" onClick={() => addCursiveKey(key, "letter")}>
-                        {key}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              </div>
 
               <button type="button" className="primary-button" disabled={busy} onClick={() => void saveLesson()}>
                 Save lesson
@@ -397,47 +563,63 @@ export function AdminContentPage() {
         </div>
       </div>
 
-      <div className="banner" style={{ marginTop: "1.5rem" }}>
-        <strong>Re-seed from YAML</strong>
-        <p>Restores defaults from content files. Type RESEED to confirm.</p>
-        <div className="field">
-          <label className="field-label" htmlFor="reseed-confirm">
-            Confirm
-          </label>
-          <input
-            id="reseed-confirm"
-            className="field-input"
-            value={reseedConfirm}
-            onChange={(event) => setReseedConfirm(event.target.value)}
-          />
-        </div>
-        <button
-          type="button"
-          className="primary-button"
-          disabled={busy || reseedConfirm !== "RESEED"}
-          onClick={() =>
-            void (async () => {
-              setBusy(true);
-              setError("");
-              try {
-                const result = await apiPost<{ message: string }>("/api/admin/content/reseed", {
-                  track,
-                  confirm: "RESEED",
-                });
-                setMessage(result.message);
-                setReseedConfirm("");
-                await load();
-              } catch (err) {
-                setError(err instanceof ApiError ? err.message : "Reseed failed.");
-              } finally {
-                setBusy(false);
+      <details
+        className="admin-disclosure"
+        open={reseedOpen}
+        onToggle={(event) => setReseedOpen((event.target as HTMLDetailsElement).open)}
+      >
+        <summary className="admin-disclosure-summary">
+          <strong>Advanced · Re-seed {track}</strong>
+          <span>Restore packaged YAML defaults</span>
+        </summary>
+        {reseedOpen ? (
+          <div className="admin-reseed">
+            <p className="page-copy">
+              <strong>This overwrites database content for {track} from built-in files.</strong> Type
+              RESEED to confirm.
+            </p>
+            <div className="field">
+              <label className="field-label" htmlFor="reseed-confirm">
+                Confirm
+              </label>
+              <input
+                id="reseed-confirm"
+                className="field-input"
+                value={reseedConfirm}
+                onChange={(event) => setReseedConfirm(event.target.value)}
+                placeholder="RESEED"
+                autoComplete="off"
+              />
+            </div>
+            <button
+              type="button"
+              className="secondary-button"
+              disabled={busy || reseedConfirm !== "RESEED"}
+              onClick={() =>
+                void (async () => {
+                  setBusy(true);
+                  setError("");
+                  try {
+                    const result = await apiPost<{ message: string }>("/api/admin/content/reseed", {
+                      track,
+                      confirm: "RESEED",
+                    });
+                    setMessage(result.message);
+                    setReseedConfirm("");
+                    await load();
+                  } catch (err) {
+                    setError(err instanceof ApiError ? err.message : "Reseed failed.");
+                  } finally {
+                    setBusy(false);
+                  }
+                })()
               }
-            })()
-          }
-        >
-          Re-seed {track}
-        </button>
-      </div>
+            >
+              Re-seed {track}
+            </button>
+          </div>
+        ) : null}
+      </details>
     </section>
   );
 }

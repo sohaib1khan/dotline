@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { homePathFor } from "@/lib/homePath";
 import { useAuth } from "@/store/auth";
 
 export function RequireAuth({ role }: { role?: "admin" | "learner" }) {
@@ -22,8 +23,9 @@ export function RequireAuth({ role }: { role?: "admin" | "learner" }) {
     return <Navigate to="/check-email" replace />;
   }
 
+  // Learners cannot open the admin console.
   if (role === "admin" && user.role !== "admin") {
-    return <Navigate to="/app" replace />;
+    return <Navigate to={homePathFor({ role: "learner" })} replace />;
   }
 
   return <Outlet />;

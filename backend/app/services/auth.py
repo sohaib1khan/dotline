@@ -8,7 +8,6 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
 from app.models.auth import LoginEvent
 from app.models.user import User, UserRole, UserSetting
 from app.security.passwords import hash_password, verify_password
@@ -83,19 +82,41 @@ def authenticate_user(
         )
 
     user = find_user_by_login(db, login)
-    ok = bool(user and user.is_active and verify_password(user.password_hash, password))
+    password_ok = bool(user and verify_password(user.password_hash, password))
+    if not password_ok:
+        record_login_event(
+            db,
+            user=user,
+            email_attempted=account_key,
+            success=False,
+            ip=ip,
+            user_agent=user_agent,
+        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+    assert user is not None
+    if not user.is_active:
+        record_login_event(
+            db,
+            user=user,
+            email_attempted=account_key,
+            success=False,
+            ip=ip,
+            user_agent=user_agent,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is waiting for an admin to approve it.",
+        )
+
     record_login_event(
         db,
         user=user,
         email_attempted=account_key,
-        success=ok,
+        success=True,
         ip=ip,
         user_agent=user_agent,
     )
-    if not ok:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-    assert user is not None
     user.last_login_at = datetime.now(UTC)
     db.commit()
     db.refresh(user)
@@ -141,26 +162,38 @@ def register_learner(
             detail={"username": "This username is already taken."},
         )
 
+    # First account on an empty install is always admin (setup / recovery).
+    from app.services.setup import admin_exists, clear_admin_exists_cache
+
+    make_admin = not admin_exists(db, use_cache=False)
     email_ready = settings_service.email_is_configured(db)
+    needs_verification = (
+        False if make_admin else settings_service.require_email_verification(db)
+    )
+    # Resend working → learners self-confirm by email (or auto-verify if admin
+    # turned verification off). Without Resend → create inactive until admin approves.
+    pending_approval = False if make_admin or email_ready else True
     user = User(
         first_name=first,
         last_name=last,
         username=uname,
         email=mail,
         password_hash=hash_password(pwd),
-        role=UserRole.LEARNER.value,
-        # Without Resend, auto-verify so local/MVP sign-ups can proceed.
-        email_verified_at=datetime.now(UTC) if not email_ready else None,
-        is_active=True,
+        role=UserRole.ADMIN.value if make_admin else UserRole.LEARNER.value,
+        email_verified_at=None if needs_verification else datetime.now(UTC),
+        is_active=not pending_approval,
     )
     db.add(user)
     db.flush()
     db.add(UserSetting(user_id=user.id))
     db.flush()
 
-    if not email_ready:
+    if not needs_verification:
         db.commit()
         db.refresh(user)
+        if make_admin:
+            clear_admin_exists_cache()
+            admin_exists(db, use_cache=False)
         return user, False
 
     try:
@@ -175,7 +208,7 @@ def register_learner(
 
 def send_verification_email(db: Session, user: User, *, commit: bool = True) -> None:
     raw = create_email_token(db, user_id=user.id, purpose="verify", commit=commit)
-    base = get_settings().public_base_url.rstrip("/")
+    base = settings_service.public_base_url(db)
     link = f"{base}/verify-email?token={raw}"
     try:
         send_email(
@@ -219,7 +252,7 @@ def request_password_reset(db: Session, email: str) -> None:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Email is not configured")
 
     raw = create_email_token(db, user_id=user.id, purpose="reset")
-    base = get_settings().public_base_url.rstrip("/")
+    base = settings_service.public_base_url(db)
     link = f"{base}/reset-password?token={raw}"
     try:
         send_email(

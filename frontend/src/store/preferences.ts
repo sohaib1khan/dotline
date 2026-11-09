@@ -47,6 +47,8 @@ function syncDom(settings: UserSettings) {
         text_scale: settings.text_scale,
         reduce_motion: settings.reduce_motion,
         reduced_visuals: settings.reduced_visuals,
+        sfx_enabled: settings.sfx_enabled,
+        speech_enabled: settings.speech_enabled,
       }),
     );
   } catch {
@@ -71,7 +73,7 @@ export const usePreferences = create<PreferencesState>((set, get) => ({
 }));
 
 export function themeLabel(theme: ThemeName): string {
-  if (theme === "high_contrast_light") return "High-contrast light";
-  if (theme === "yellow_on_black") return "Yellow on black";
-  return "High-contrast dark";
+  if (theme === "high_contrast_light") return "Mist marsh";
+  if (theme === "yellow_on_black") return "Sand on deep";
+  return "Wetland night";
 }

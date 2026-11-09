@@ -1,17 +1,20 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { AdminEmailPanel } from "@/components/AdminEmailPanel";
 import { ApiError, apiGet, apiPut } from "@/lib/api";
 
 type Tab = "general" | "signups" | "email";
 
 type GeneralSettings = {
   app_name: string;
-  default_daily_goal_minutes: 5 | 10 | 20;
+  default_daily_goal_minutes: number;
+  support_email: string;
+  public_base_url: string;
+  welcome_message: string;
   signups_open: boolean;
 };
 
 export function AdminSettingsHubPage() {
-  const [tab, setTab] = useState<Tab>("general");
+  const [tab, setTab] = useState<Tab>("email");
   const [general, setGeneral] = useState<GeneralSettings | null>(null);
   const [signupsOpen, setSignupsOpen] = useState(true);
   const [error, setError] = useState("");
@@ -39,7 +42,10 @@ export function AdminSettingsHubPage() {
     try {
       const saved = await apiPut<GeneralSettings>("/api/admin/settings/general", {
         app_name: general.app_name,
-        default_daily_goal_minutes: general.default_daily_goal_minutes,
+        default_daily_goal_minutes: Number(general.default_daily_goal_minutes),
+        support_email: general.support_email || null,
+        public_base_url: general.public_base_url || null,
+        welcome_message: general.welcome_message || null,
       });
       setGeneral(saved);
       setMessage("General settings saved.");
@@ -70,15 +76,19 @@ export function AdminSettingsHubPage() {
   return (
     <section aria-labelledby="admin-settings-title">
       <h1 id="admin-settings-title" className="page-title">
-        Settings
+        Resend & settings
       </h1>
+      <p className="page-copy">
+        <strong>Admin configuration — not the learner practice UI.</strong> Set Resend, sign-ups, and
+        site defaults here. Changes apply right away.
+      </p>
 
       <div className="settings-tabs" role="tablist" aria-label="Settings sections">
         {(
           [
+            ["email", "Resend email"],
             ["general", "General"],
             ["signups", "Sign-ups"],
-            ["email", "Email"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -105,8 +115,18 @@ export function AdminSettingsHubPage() {
         </div>
       ) : null}
 
+      {tab === "email" ? (
+        <AdminEmailPanel
+          onSaved={() => setMessage("Email settings updated.")}
+        />
+      ) : null}
+
       {tab === "general" && general ? (
-        <form className="report-form" onSubmit={(event) => void saveGeneral(event)}>
+        <form className="settings-form" onSubmit={(event) => void saveGeneral(event)}>
+          <p className="lede">
+            <strong>Tune the site for your learners.</strong> Daily goal can be any length from 1 to
+            180 minutes.
+          </p>
           <div className="field">
             <label className="field-label" htmlFor="app-name">
               App display name
@@ -119,24 +139,64 @@ export function AdminSettingsHubPage() {
               required
             />
           </div>
-          <fieldset className="report-categories">
-            <legend className="field-label">Default daily goal (minutes)</legend>
-            <div className="choice-grid">
-              {([5, 10, 20] as const).map((mins) => (
-                <button
-                  key={mins}
-                  type="button"
-                  className={`secondary-button${
-                    general.default_daily_goal_minutes === mins ? " is-selected" : ""
-                  }`}
-                  aria-pressed={general.default_daily_goal_minutes === mins}
-                  onClick={() => setGeneral({ ...general, default_daily_goal_minutes: mins })}
-                >
-                  {mins}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          <div className="field">
+            <label className="field-label" htmlFor="daily-goal">
+              Default daily goal (minutes)
+            </label>
+            <input
+              id="daily-goal"
+              className="field-input"
+              type="number"
+              min={1}
+              max={180}
+              step={1}
+              value={general.default_daily_goal_minutes}
+              onChange={(event) =>
+                setGeneral({
+                  ...general,
+                  default_daily_goal_minutes: Number(event.target.value),
+                })
+              }
+              required
+            />
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="support-email">
+              Support / contact email (optional)
+            </label>
+            <input
+              id="support-email"
+              className="field-input"
+              type="email"
+              value={general.support_email}
+              onChange={(event) => setGeneral({ ...general, support_email: event.target.value })}
+            />
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="public-url">
+              Public site URL (used in email links)
+            </label>
+            <input
+              id="public-url"
+              className="field-input"
+              type="url"
+              placeholder="https://dotline.example.com"
+              value={general.public_base_url}
+              onChange={(event) => setGeneral({ ...general, public_base_url: event.target.value })}
+            />
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="welcome-message">
+              Door chooser welcome line
+            </label>
+            <textarea
+              id="welcome-message"
+              className="field-input"
+              rows={3}
+              value={general.welcome_message}
+              onChange={(event) => setGeneral({ ...general, welcome_message: event.target.value })}
+            />
+          </div>
           <button type="submit" className="primary-button" disabled={busy}>
             Save general
           </button>
@@ -144,39 +204,31 @@ export function AdminSettingsHubPage() {
       ) : null}
 
       {tab === "signups" ? (
-        <div className="report-form">
-          <p className="lede">Close sign-ups to stop new learner accounts.</p>
-          <button
-            type="button"
-            className={`secondary-button${signupsOpen ? " is-selected" : ""}`}
-            aria-pressed={signupsOpen}
-            onClick={() => setSignupsOpen(true)}
-          >
-            Open
-          </button>
-          <button
-            type="button"
-            className={`secondary-button${!signupsOpen ? " is-selected" : ""}`}
-            aria-pressed={!signupsOpen}
-            onClick={() => setSignupsOpen(false)}
-          >
-            Closed
-          </button>
+        <div className="settings-form">
+          <p className="lede">
+            <strong>Open or close new learner accounts</strong> without touching the database.
+          </p>
+          <div className="cta-row" style={{ justifyContent: "flex-start" }}>
+            <button
+              type="button"
+              className={`secondary-button${signupsOpen ? " is-selected" : ""}`}
+              aria-pressed={signupsOpen}
+              onClick={() => setSignupsOpen(true)}
+            >
+              Open
+            </button>
+            <button
+              type="button"
+              className={`secondary-button${!signupsOpen ? " is-selected" : ""}`}
+              aria-pressed={!signupsOpen}
+              onClick={() => setSignupsOpen(false)}
+            >
+              Closed
+            </button>
+          </div>
           <button type="button" className="primary-button" disabled={busy} onClick={() => void saveSignups()}>
             Save sign-ups
           </button>
-        </div>
-      ) : null}
-
-      {tab === "email" ? (
-        <div className="banner" role="status">
-          <strong>Resend email settings</strong>
-          <p>
-            Configure the API key and From address on the dedicated email page.{" "}
-            <Link className="secondary-button link-button" to="/admin/settings/email">
-              Open email settings
-            </Link>
-          </p>
         </div>
       ) : null}
     </section>

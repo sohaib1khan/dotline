@@ -59,14 +59,22 @@ export function resample(points: Point[], count: number): Point[] {
   return out;
 }
 
+export type StrokeScore = {
+  score: number;
+  feedback: string;
+  startOk: boolean;
+  directionOk: boolean;
+};
+
 export function scoreAgainstGuide(
   learner: Point[],
   guide: Point[],
-  options?: { startTolerance?: number; shapeTolerance?: number },
-): { score: number; feedback: string; startOk: boolean; directionOk: boolean } {
+  options?: { startTolerance?: number; shapeTolerance?: number; minPoints?: number },
+): StrokeScore {
   const startTolerance = options?.startTolerance ?? 22;
   const shapeTolerance = options?.shapeTolerance ?? 18;
-  if (learner.length < 6 || guide.length < 6) {
+  const minPoints = options?.minPoints ?? 6;
+  if (learner.length < minPoints || guide.length < 2) {
     return { score: 0, feedback: "Draw a longer stroke.", startOk: false, directionOk: false };
   }
 
@@ -86,16 +94,32 @@ export function scoreAgainstGuide(
   const avg = sum / a.length;
   let shape = Math.max(0, 1 - avg / (shapeTolerance * 2.2));
   if (!startOk) shape *= 0.75;
-  if (!directionOk) shape *= 0.85;
+  // Direction is a soft hint — shape match matters more (multi-stroke letters
+  // often end mid-glyph when the learner lifts for the next stroke).
+  if (!directionOk) shape *= 0.92;
   const score = Math.round(shape * 100);
 
   let feedback = "Nice tracing.";
   if (!startOk) feedback = "Start closer to the beginning of the guide.";
-  else if (!directionOk) feedback = "Check your direction — follow the ghost pen.";
   else if (score < 55) feedback = "Stay closer to the guide path.";
+  else if (!directionOk && score < 70) feedback = "Follow the ghost pen’s direction.";
   else if (avg > shapeTolerance) feedback = "A little too wide — tighten the curves.";
 
   return { score, feedback, startOk, directionOk };
+}
+
+/** Score one stroke of a multi-stroke glyph (e.g. i stem, then i dot). */
+export function scoreAgainstStroke(
+  learner: Point[],
+  stroke: StrokeDef,
+  options?: { startTolerance?: number; shapeTolerance?: number; minPoints?: number },
+): StrokeScore {
+  const samples = Math.max(12, Math.min(48, Math.round(stroke.path.length / 2)));
+  return scoreAgainstGuide(learner, samplePath(stroke.path, samples), {
+    startTolerance: options?.startTolerance ?? 28,
+    shapeTolerance: options?.shapeTolerance ?? 22,
+    minPoints: options?.minPoints ?? (stroke.path.length < 24 ? 3 : 6),
+  });
 }
 
 export function nearestDistance(point: Point, guide: Point[]) {

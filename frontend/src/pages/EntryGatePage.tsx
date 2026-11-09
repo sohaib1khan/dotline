@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { apiGet } from "@/lib/api";
+import { homePathFor, learnerHomePath } from "@/lib/homePath";
 import { LandingPage } from "@/pages/LandingPage";
 import { useAuth } from "@/store/auth";
 
@@ -57,7 +58,7 @@ export function EntryGatePage() {
 
   if (user?.email_verified_at) {
     if (user.role === "admin") {
-      return <Navigate to="/admin" replace />;
+      return <Navigate to={homePathFor(user)} replace />;
     }
     return <LearnerHomeRedirect />;
   }
@@ -70,13 +71,9 @@ function LearnerHomeRedirect() {
 
   useEffect(() => {
     let cancelled = false;
-    void apiGet<{ tracks: string[] }>("/api/me/tracks")
-      .then((data) => {
-        if (!cancelled) setPath(data.tracks.length === 0 ? "/tracks" : "/app");
-      })
-      .catch(() => {
-        if (!cancelled) setPath("/tracks");
-      });
+    void learnerHomePath(() => apiGet<{ tracks: string[] }>("/api/me/tracks")).then((next) => {
+      if (!cancelled) setPath(next);
+    });
     return () => {
       cancelled = true;
     };

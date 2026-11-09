@@ -57,10 +57,20 @@ def me(db: Session = Depends(get_db), user: User = Depends(get_current_user)) ->
 @router.get("/signup-status")
 def signup_status(db: Session = Depends(get_db)) -> dict:
     open_ = settings_service.signups_open(db)
+    mode = settings_service.signup_gate_mode(db)
+    if not open_:
+        message = "Sign-ups are temporarily closed."
+    elif mode == "admin":
+        message = "Sign-ups are open. After you create an account, an admin must approve it before you can log in."
+    elif mode == "email":
+        message = "Sign-ups are open. You will confirm your email to finish creating your account."
+    else:
+        message = "Sign-ups are open. You can log in right after creating your account."
     return {
         "signups_open": open_,
         "email_configured": settings_service.email_is_configured(db),
-        "message": None if open_ else "Sign-ups are temporarily closed.",
+        "gate_mode": mode,
+        "message": message,
     }
 
 
@@ -104,7 +114,7 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)) 
 @router.post("/signup", response_model=SignupResponse, dependencies=[Depends(require_csrf)])
 @limiter.limit("10/minute")
 def signup(request: Request, payload: SignupRequest, db: Session = Depends(get_db)) -> SignupResponse:
-    _, verification_required = auth_service.register_learner(
+    user, verification_required = auth_service.register_learner(
         db,
         first_name=payload.first_name,
         last_name=payload.last_name,
@@ -115,12 +125,26 @@ def signup(request: Request, payload: SignupRequest, db: Session = Depends(get_d
     )
     if verification_required:
         return SignupResponse(
-            message="Account created. Check your email to verify.",
+            message="Account created. Check your email to confirm and start learning.",
             verification_required=True,
+            pending_approval=False,
+        )
+    if user.role == "admin":
+        return SignupResponse(
+            message="Admin account created. Log in to open the admin console.",
+            verification_required=False,
+            pending_approval=False,
+        )
+    if not user.is_active:
+        return SignupResponse(
+            message="Account created. An admin must approve it before you can log in.",
+            verification_required=False,
+            pending_approval=True,
         )
     return SignupResponse(
         message="Account created. You can log in now.",
         verification_required=False,
+        pending_approval=False,
     )
 
 

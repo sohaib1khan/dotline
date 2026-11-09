@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import GridLayout, { type Layout } from "react-grid-layout";
 import { Link } from "react-router-dom";
 import { SimpleBars } from "@/components/SimpleBars";
@@ -42,6 +42,24 @@ function shortDate(iso: string) {
   return iso.slice(5);
 }
 
+function lastDays<T>(rows: T[], count = 14): T[] {
+  return rows.length <= count ? rows : rows.slice(rows.length - count);
+}
+
+const WIDGET_ORDER = [
+  "active_now",
+  "dau",
+  "active_time",
+  "by_track",
+  "signups",
+  "lessons_completed",
+  "top_learners",
+  "hardest_lessons",
+  "recent_logins",
+  "failed_spikes",
+  "open_bugs",
+] as const;
+
 export function AdminMonitoringPage() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [layout, setLayout] = useState<Layout[]>([]);
@@ -49,7 +67,9 @@ export function AdminMonitoringPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [width, setWidth] = useState(900);
+  const [compact, setCompact] = useState(false);
   const [busy, setBusy] = useState(false);
+  const hostRef = useRef<HTMLDivElement | null>(null);
 
   const load = useCallback(async () => {
     const [dashboard, layoutResp] = await Promise.all([
@@ -67,11 +87,21 @@ export function AdminMonitoringPage() {
   }, [load]);
 
   useEffect(() => {
-    const node = document.querySelector(".panel");
-    const update = () => setWidth(Math.max(320, (node?.clientWidth || 900) - 24));
+    const node = hostRef.current;
+    if (!node) return;
+    const update = () => {
+      const next = Math.max(280, node.clientWidth);
+      setWidth(next);
+      setCompact(next < 800);
+    };
     update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
     window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
   }, []);
 
   async function persistLayout(next: Layout[]) {
@@ -104,14 +134,14 @@ export function AdminMonitoringPage() {
         <>
           <h2>Active now</h2>
           <p className="monitor-stat">{data.active_now.count}</p>
-          <p className="lede">Heartbeat in the last 2 minutes.</p>
+          <p className="monitor-hint">Heartbeat in the last 2 minutes</p>
         </>
       ),
       dau: (
         <>
           <h2>Daily active users</h2>
           <SimpleBars
-            items={data.dau.map((row) => ({ label: shortDate(row.date), value: row.count }))}
+            items={lastDays(data.dau).map((row) => ({ label: shortDate(row.date), value: row.count }))}
             labelKey="label"
             valueKey="value"
           />
@@ -121,7 +151,7 @@ export function AdminMonitoringPage() {
         <>
           <h2>Active time by day</h2>
           <SimpleBars
-            items={data.active_time.map((row) => ({
+            items={lastDays(data.active_time).map((row) => ({
               label: shortDate(row.date),
               value: row.active_seconds,
             }))}
@@ -147,24 +177,25 @@ export function AdminMonitoringPage() {
       ),
       top_learners: (
         <>
-          <h2>Top learners ({topDays}d)</h2>
-          <div className="cta-row" style={{ justifyContent: "flex-start" }}>
+          <h2>Top learners</h2>
+          <div className="admin-segment monitor-range" role="group" aria-label="Range">
             {[7, 14, 30].map((days) => (
               <button
                 key={days}
                 type="button"
-                className={`secondary-button${topDays === days ? " is-selected" : ""}`}
+                className={`admin-segment-btn${topDays === days ? " is-selected" : ""}`}
                 onClick={() => setTopDays(days)}
               >
                 {days}d
               </button>
             ))}
           </div>
-          <ul className="plain-list">
+          <ul className="monitor-list">
             {data.top_learners.length === 0 ? <li>No activity yet.</li> : null}
             {data.top_learners.map((row) => (
               <li key={row.username}>
-                <strong>@{row.username}</strong> — {formatSeconds(row.active_seconds)}
+                <strong>@{row.username}</strong>
+                <span>{formatSeconds(row.active_seconds)}</span>
               </li>
             ))}
           </ul>
@@ -174,7 +205,10 @@ export function AdminMonitoringPage() {
         <>
           <h2>New sign-ups</h2>
           <SimpleBars
-            items={data.signups.map((row) => ({ label: shortDate(row.date), value: row.count }))}
+            items={lastDays(data.signups).map((row) => ({
+              label: shortDate(row.date),
+              value: row.count,
+            }))}
             labelKey="label"
             valueKey="value"
           />
@@ -184,7 +218,7 @@ export function AdminMonitoringPage() {
         <>
           <h2>Lessons completed</h2>
           <SimpleBars
-            items={data.lessons_completed.map((row) => ({
+            items={lastDays(data.lessons_completed).map((row) => ({
               label: shortDate(row.date),
               value: row.count,
             }))}
@@ -196,12 +230,14 @@ export function AdminMonitoringPage() {
       hardest_lessons: (
         <>
           <h2>Hardest lessons</h2>
-          <ul className="plain-list">
+          <ul className="monitor-list">
             {data.hardest_lessons.length === 0 ? <li>No lesson data yet.</li> : null}
             {data.hardest_lessons.map((row) => (
               <li key={row.title}>
-                <strong>{row.title}</strong> — avg score {row.avg_score ?? "—"}, attempts{" "}
-                {row.avg_attempts}, learners {row.learners}
+                <strong>{row.title}</strong>
+                <span>
+                  score {row.avg_score ?? "—"} · {row.avg_attempts} attempts · {row.learners} learners
+                </span>
               </li>
             ))}
           </ul>
@@ -210,10 +246,13 @@ export function AdminMonitoringPage() {
       recent_logins: (
         <>
           <h2>Recent logins</h2>
-          <ul className="plain-list">
+          <ul className="monitor-list">
             {data.recent_logins.map((row, index) => (
               <li key={`${row.created_at}-${index}`}>
-                {row.success ? "OK" : "FAIL"} · {row.email_attempted} · {row.ip ?? "—"}
+                <strong className={row.success ? "ok" : "fail"}>{row.success ? "OK" : "FAIL"}</strong>
+                <span>
+                  {row.email_attempted} · {row.ip ?? "—"}
+                </span>
               </li>
             ))}
           </ul>
@@ -237,7 +276,7 @@ export function AdminMonitoringPage() {
       ),
       open_bugs: (
         <>
-          <h2>Open bugs by category</h2>
+          <h2>Open bugs</h2>
           <SimpleBars
             items={data.open_bugs.map((row) => ({ label: row.label, value: row.count }))}
             labelKey="label"
@@ -249,21 +288,31 @@ export function AdminMonitoringPage() {
   }, [data, topDays]);
 
   return (
-    <section aria-labelledby="monitoring-title" className="monitoring-page">
-      <h1 id="monitoring-title" className="page-title">
-        Monitoring
-      </h1>
-      <div className="cta-row" style={{ justifyContent: "flex-start" }}>
-        <button type="button" className="secondary-button" disabled={busy} onClick={() => void load()}>
-          Refresh
-        </button>
-        <button type="button" className="secondary-button" disabled={busy} onClick={() => void resetLayout()}>
-          Reset layout
-        </button>
-        <Link className="secondary-button link-button" to="/admin/monitoring/logins">
-          Login log
-        </Link>
-      </div>
+    <section aria-labelledby="monitoring-title" className="admin-page monitoring-page">
+      <header className="admin-page-header">
+        <div>
+          <h1 id="monitoring-title" className="page-title">
+            Monitoring
+          </h1>
+          <p className="page-copy">
+            <strong>Live usage and health.</strong>
+            {compact ? " Cards stack on this screen size." : " Drag widgets on larger screens."}
+          </p>
+        </div>
+        <div className="admin-toolbar">
+          <button type="button" className="secondary-button" disabled={busy} onClick={() => void load()}>
+            Refresh
+          </button>
+          {!compact ? (
+            <button type="button" className="secondary-button" disabled={busy} onClick={() => void resetLayout()}>
+              Reset layout
+            </button>
+          ) : null}
+          <Link className="secondary-button link-button" to="/admin/monitoring/logins">
+            Login log
+          </Link>
+        </div>
+      </header>
 
       {error ? (
         <p className="field-error" role="alert">
@@ -276,29 +325,45 @@ export function AdminMonitoringPage() {
         </div>
       ) : null}
 
-      {!data ? (
-        <p className="lede">Loading dashboard…</p>
-      ) : (
-        <GridLayout
-          className="monitor-grid"
-          layout={layout}
-          cols={12}
-          rowHeight={48}
-          width={width}
-          draggableHandle=".monitor-drag"
-          onDragStop={(next) => void persistLayout(next)}
-          onResizeStop={(next) => void persistLayout(next)}
-        >
-          {layout.map((item) => (
-            <div key={item.i} className="monitor-widget">
-              <button type="button" className="monitor-drag secondary-button">
-                Move
-              </button>
-              <div className="monitor-widget-body">{widgets[item.i]}</div>
-            </div>
-          ))}
-        </GridLayout>
-      )}
+      <div ref={hostRef} className="monitor-host">
+        {!data ? (
+          <p className="admin-empty">
+            <strong>Loading dashboard…</strong>
+          </p>
+        ) : compact ? (
+          <div className="monitor-stack">
+            {WIDGET_ORDER.map((id) =>
+              widgets[id] ? (
+                <article key={id} className="monitor-widget monitor-widget-static">
+                  <div className="monitor-widget-body">{widgets[id]}</div>
+                </article>
+              ) : null,
+            )}
+          </div>
+        ) : (
+          <GridLayout
+            className="monitor-grid"
+            layout={layout}
+            cols={12}
+            rowHeight={56}
+            width={width}
+            margin={[12, 12]}
+            containerPadding={[0, 0]}
+            draggableHandle=".monitor-drag"
+            onDragStop={(next) => void persistLayout(next)}
+            onResizeStop={(next) => void persistLayout(next)}
+          >
+            {layout.map((item) => (
+              <div key={item.i} className="monitor-widget">
+                <button type="button" className="monitor-drag" aria-label="Drag widget">
+                  ⋮⋮
+                </button>
+                <div className="monitor-widget-body">{widgets[item.i]}</div>
+              </div>
+            ))}
+          </GridLayout>
+        )}
+      </div>
     </section>
   );
 }

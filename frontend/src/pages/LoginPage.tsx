@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthShell, Field, FormStatus, type SubmitHandler } from "@/components/AuthForm";
 import { ApiError, apiGet, apiPost, clearCsrf } from "@/lib/api";
+import { homePathFor, learnerHomePath } from "@/lib/homePath";
 import type { MeResponse, UserSettings } from "@/lib/types";
 import { useAuth } from "@/store/auth";
 import { usePreferences } from "@/store/preferences";
@@ -37,16 +38,15 @@ export function LoginPage() {
         navigate("/check-email");
         return;
       }
+      // Role comes from the server — admin always opens the console.
       if (me.user.role === "admin") {
-        navigate("/admin/settings/email");
+        navigate(homePathFor(me.user), { replace: true });
         return;
       }
-      try {
-        const tracks = await apiGet<{ tracks: string[] }>("/api/me/tracks");
-        navigate(tracks.tracks.length === 0 ? "/tracks" : "/app");
-      } catch {
-        navigate("/tracks");
-      }
+      navigate(
+        await learnerHomePath(() => apiGet<{ tracks: string[] }>("/api/me/tracks")),
+        { replace: true },
+      );
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Login failed.");
     } finally {

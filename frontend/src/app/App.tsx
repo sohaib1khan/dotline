@@ -19,6 +19,7 @@ import { BrailleTrackPage } from "@/pages/BrailleTrackPage";
 import { CheckEmailPage } from "@/pages/CheckEmailPage";
 import { CursiveLessonPage } from "@/pages/CursiveLessonPage";
 import { CursiveTrackPage } from "@/pages/CursiveTrackPage";
+import { DoorChooserPage } from "@/pages/DoorChooserPage";
 import { EntryGatePage } from "@/pages/EntryGatePage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { GamePlayPage } from "@/pages/GamePlayPage";
@@ -29,11 +30,11 @@ import { LoginPage } from "@/pages/LoginPage";
 import { ProgressPage } from "@/pages/ProgressPage";
 import { ReportProblemPage } from "@/pages/ReportProblemPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
+import { RoomStatusboardPage } from "@/pages/RoomStatusboardPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { SetupPage } from "@/pages/SetupPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { SignatureStudioPage } from "@/pages/SignatureStudioPage";
-import { StatusboardPage } from "@/pages/StatusboardPage";
 import { TracksPage } from "@/pages/TracksPage";
 import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
 
@@ -55,7 +56,8 @@ export function App() {
           <Route element={<RequireAuth />}>
             <Route path="/tracks" element={<TracksPage />} />
             <Route element={<AppFrame mode="learner" />}>
-              <Route path="/app" element={<StatusboardPage />} />
+              <Route path="/app" element={<DoorChooserPage />} />
+              <Route path="/app/rooms/:track" element={<RoomStatusboardPage />} />
               <Route path="/app/braille" element={<BrailleTrackPage />} />
               <Route path="/app/braille/lessons/:lessonId" element={<BrailleLessonPage />} />
               <Route path="/app/cursive" element={<CursiveTrackPage />} />

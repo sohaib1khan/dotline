@@ -59,3 +59,16 @@ class MoveRequest(BaseModel):
 class ReseedRequest(BaseModel):
     track: Literal["braille", "cursive", "all"] = "all"
     confirm: str = Field(min_length=5, max_length=32)
+
+
+class ImportConfirmRequest(BaseModel):
+    confirm: str = Field(min_length=5, max_length=32)
+
+
+class ImportResult(BaseModel):
+    message: str
+    braille_units: int
+    braille_lessons: int
+    cursive_units: int
+    cursive_lessons: int
+    files_written: int

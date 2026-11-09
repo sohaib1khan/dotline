@@ -1,4 +1,4 @@
-"""Admin settings: email / Resend configuration."""
+"""Admin settings: general, sign-ups, and Resend email."""
 
 from __future__ import annotations
 
@@ -50,11 +50,41 @@ def update_email_settings(
         updated_by=admin.id,
     )
 
-    if payload.replace_api_key or not settings_service.get_setting(db, settings_service.KEY_RESEND_API):
+    if payload.reply_to:
+        settings_service.set_setting(
+            db,
+            settings_service.KEY_REPLY_TO,
+            payload.reply_to.strip().lower(),
+            updated_by=admin.id,
+        )
+    else:
+        settings_service.delete_setting(db, settings_service.KEY_REPLY_TO)
+
+    if payload.public_base_url is not None:
+        if payload.public_base_url:
+            settings_service.set_setting(
+                db,
+                settings_service.KEY_PUBLIC_BASE_URL,
+                payload.public_base_url,
+                updated_by=admin.id,
+            )
+        else:
+            settings_service.delete_setting(db, settings_service.KEY_PUBLIC_BASE_URL)
+
+    settings_service.set_setting(
+        db,
+        settings_service.KEY_REQUIRE_VERIFICATION,
+        "true" if payload.require_verification else "false",
+        updated_by=admin.id,
+    )
+
+    if payload.clear_api_key:
+        settings_service.delete_setting(db, settings_service.KEY_RESEND_API)
+    elif payload.replace_api_key:
         if not payload.api_key:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail={"api_key": "Resend API key is required."},
+                detail={"api_key": "Resend API key is required when adding or replacing a key."},
             )
         settings_service.set_setting(
             db,
@@ -64,7 +94,6 @@ def update_email_settings(
             encrypt=True,
         )
 
-    # Default signups open once email is configured.
     if settings_service.get_setting(db, settings_service.KEY_SIGNUPS_OPEN) is None:
         settings_service.set_setting(
             db,
@@ -135,6 +164,9 @@ def update_general(
             db,
             app_name=payload.app_name,
             default_daily_goal_minutes=payload.default_daily_goal_minutes,
+            support_email=payload.support_email,
+            public_base_url_value=payload.public_base_url,
+            welcome_message=payload.welcome_message,
             updated_by=admin.id,
         )
     )

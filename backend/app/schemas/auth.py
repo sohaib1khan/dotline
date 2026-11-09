@@ -31,6 +31,7 @@ class SignupResponse(BaseModel):
     ok: bool = True
     message: str
     verification_required: bool = False
+    pending_approval: bool = False
 
 
 class UserPublic(BaseModel):

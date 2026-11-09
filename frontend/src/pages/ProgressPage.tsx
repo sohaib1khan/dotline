@@ -143,15 +143,43 @@ export function ProgressPage() {
                       <strong>{unit.unlocked ? "Unlocked" : "Locked"}</strong>
                     </p>
                     <ul className="lesson-list">
-                      {unit.lessons.map((lesson) => (
-                        <li key={lesson.id}>
-                          <strong>
-                            {lesson.order}. {lesson.title}
-                          </strong>{" "}
-                          · {lesson.status}
-                          {lesson.best_score != null ? ` · best ${Math.round(lesson.best_score)}%` : ""}
-                        </li>
-                      ))}
+                      {unit.lessons.map((lesson) => {
+                        const path =
+                          track === "braille"
+                            ? `/app/braille/lessons/${lesson.id}`
+                            : lesson.type === "signature"
+                              ? "/app/cursive/signature"
+                              : `/app/cursive/lessons/${lesson.id}`;
+                        const canOpen = unit.unlocked && lesson.status !== "locked";
+                        const replay =
+                          lesson.status === "mastered" || lesson.status === "completed";
+                        return (
+                          <li key={lesson.id}>
+                            {canOpen ? (
+                              <Link className="progress-lesson-link" to={path}>
+                                <strong>
+                                  {lesson.order}. {lesson.title}
+                                </strong>{" "}
+                                · {lesson.status}
+                                {lesson.best_score != null
+                                  ? ` · best ${Math.round(lesson.best_score)}%`
+                                  : ""}
+                                {replay ? " · Replay" : " · Open"}
+                              </Link>
+                            ) : (
+                              <span>
+                                <strong>
+                                  {lesson.order}. {lesson.title}
+                                </strong>{" "}
+                                · {lesson.status}
+                                {lesson.best_score != null
+                                  ? ` · best ${Math.round(lesson.best_score)}%`
+                                  : ""}
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </article>
                 ))}

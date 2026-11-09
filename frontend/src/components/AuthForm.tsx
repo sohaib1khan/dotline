@@ -1,4 +1,5 @@
 import type { FormEvent, ReactNode } from "react";
+import { BrandMark } from "@/components/BrandMark";
 
 export function AuthShell({
   title,
@@ -10,12 +11,16 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="main-panel setup-panel" aria-label={title}>
-      <h1 className="brand">Dotline</h1>
-      <p className="status">{title}</p>
-      {subtitle ? <p className="lede">{subtitle}</p> : null}
-      {children}
-    </main>
+    <div className="app-shell">
+      <main className="main-panel setup-panel" aria-label={title}>
+        <h1 className="brand brand-with-mark">
+          <BrandMark to="/" />
+        </h1>
+        <p className="status">{title}</p>
+        {subtitle ? <p className="lede">{subtitle}</p> : null}
+        {children}
+      </main>
+    </div>
   );
 }
 

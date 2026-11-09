@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models.user import User
 from app.schemas.admin_content import (
+    ImportResult,
     LessonAdmin,
     LessonCreateRequest,
     LessonUpdateRequest,
@@ -19,6 +21,7 @@ from app.schemas.admin_content import (
 from app.schemas.auth import MessageResponse
 from app.security.deps import require_admin, require_csrf
 from app.services import admin_content as content_service
+from app.services import content_pack
 
 router = APIRouter(prefix="/api/admin/content", tags=["admin-content"])
 
@@ -173,3 +176,55 @@ def cursive_strokes(_: User = Depends(require_admin)) -> dict:
 @router.get("/libraries/braille-alphabet")
 def braille_alphabet(_: User = Depends(require_admin)) -> dict:
     return content_service.braille_alphabet()
+
+
+@router.get("/export")
+def export_course_pack(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> Response:
+    payload = content_pack.export_course_zip(db)
+    return Response(
+        content=payload,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": 'attachment; filename="dotline-course.zip"',
+        },
+    )
+
+
+@router.post(
+    "/import",
+    response_model=ImportResult,
+    dependencies=[Depends(require_csrf)],
+)
+async def import_course_pack(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+    confirm: str = Form(...),
+    pack: UploadFile = File(...),
+) -> ImportResult:
+    if confirm.strip().upper() != "IMPORT":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"confirm": "Type IMPORT to confirm replacing course content."},
+        )
+    raw = await pack.read()
+    if not raw:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Upload a Dotline course ZIP (units + alphabet + strokes).",
+        )
+    result = content_pack.import_course_zip(db, raw)
+    return ImportResult(
+        message=(
+            "Course pack imported. "
+            f"Braille {result['braille_units']} units / {result['braille_lessons']} lessons · "
+            f"Cursive {result['cursive_units']} units / {result['cursive_lessons']} lessons."
+        ),
+        braille_units=result["braille_units"],
+        braille_lessons=result["braille_lessons"],
+        cursive_units=result["cursive_units"],
+        cursive_lessons=result["cursive_lessons"],
+        files_written=result["files_written"],
+    )

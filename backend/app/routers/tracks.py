@@ -19,7 +19,7 @@ def get_tracks(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> TracksResponse:
-    return TracksResponse(tracks=track_service.list_tracks(db, user.id))
+    return TracksResponse(tracks=track_service.list_tracks_for_user(db, user))
 
 
 @router.put("/tracks", response_model=TracksResponse, dependencies=[Depends(require_csrf)])

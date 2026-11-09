@@ -212,8 +212,37 @@ export function AdminBugsPage() {
               </p>
               <p className="inbox-body">{selected.description || "(no description)"}</p>
 
+              {selected.context ? (
+                <div className="unit-card" style={{ marginBottom: "0.75rem" }}>
+                  <p className="meter">
+                    <strong>Reported page:</strong>{" "}
+                    {String(
+                      selected.context.reported_page ??
+                        selected.context.route ??
+                        "(unknown)",
+                    )}
+                  </p>
+                  {selected.context.reported_page_title ? (
+                    <p className="meter">
+                      <strong>Page title:</strong> {String(selected.context.reported_page_title)}
+                    </p>
+                  ) : null}
+                  {selected.context.lesson_or_game ? (
+                    <p className="meter">
+                      <strong>Activity:</strong> {String(selected.context.lesson_or_game)}
+                    </p>
+                  ) : null}
+                  {selected.context.report_form_route ? (
+                    <p className="meter">
+                      <strong>Opened report form at:</strong>{" "}
+                      {String(selected.context.report_form_route)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
               <details>
-                <summary className="secondary-button link-button">Captured context</summary>
+                <summary className="secondary-button link-button">Captured context (full)</summary>
                 <pre className="report-context-pre" tabIndex={0}>
                   {JSON.stringify(selected.context ?? {}, null, 2)}
                 </pre>

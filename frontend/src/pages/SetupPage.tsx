@@ -122,6 +122,7 @@ export function SetupPage() {
   }
 
   return (
+    <div className="app-shell">
     <main className="main-panel setup-panel" aria-labelledby={`${formId}-title`}>
       <h1 id={`${formId}-title`} className="brand">
         Dotline
@@ -192,6 +193,7 @@ export function SetupPage() {
         </button>
       </form>
     </main>
+    </div>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { TouchBraillePad } from "@/components/TouchBraillePad";
+import { PerkinsKeyboard } from "@/components/PerkinsKeyboard";
 import { CelebrationOverlay, type CelebrationPayload } from "@/components/CelebrationOverlay";
 import { BrailleCell } from "@/features/braille/BrailleCell";
 import { feedback } from "@/feedback";
@@ -30,6 +31,8 @@ export type LessonDetail = {
   content: {
     instruction?: string;
     pass_score?: number;
+    passage?: string;
+    passage_speak?: string;
     items?: LessonItem[];
   };
 };
@@ -80,6 +83,9 @@ export function LessonPlayer({ lesson }: Props) {
   const [error, setError] = useState("");
   const [celebration, setCelebration] = useState<CelebrationPayload | null>(null);
   const [pending, setPending] = useState<CelebrationPayload[]>([]);
+  const [pendingTotals, setPendingTotals] = useState<{ correct: number; answered: number } | null>(
+    null,
+  );
 
   const current = items[index] ?? null;
   const mode = current ? itemMode(lesson.type, current) : "chord";
@@ -92,7 +98,13 @@ export function LessonPlayer({ lesson }: Props) {
     setMessage("");
     setDone(null);
     setError("");
+    setPendingTotals(null);
   }, [lesson.id]);
+
+  useEffect(() => {
+    if (done || !lesson.content.passage_speak) return;
+    feedback.speak(lesson.content.passage_speak);
+  }, [lesson.id, lesson.content.passage_speak, done]);
 
   useEffect(() => {
     if (!current || done) return;
@@ -101,8 +113,17 @@ export function LessonPlayer({ lesson }: Props) {
   }, [current, done, index]);
 
   useEffect(() => {
-    if (!current || done || mode !== "chord") return;
+    if (!current || done) return;
     return subscribeInput((action) => {
+      if (action.type === "prev") {
+        goBack();
+        return;
+      }
+      if (action.type === "next") {
+        if (canGoNext()) goNext();
+        return;
+      }
+      if (mode !== "chord") return;
       if (action.type === "dotPress" && action.down) {
         feedback.dot(action.dot);
       }
@@ -117,18 +138,41 @@ export function LessonPlayer({ lesson }: Props) {
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current, done, mode, index, correctCount, answered]);
+  }, [current, done, mode, index, correctCount, answered, status, pendingTotals, submitting]);
 
-  function advance(nextCorrect: number, nextAnswered: number) {
+  function canGoNext() {
+    return Boolean(
+      pendingTotals || status === "correct" || (lesson.type === "review" && status === "wrong"),
+    );
+  }
+
+  function goNext() {
+    if (submitting || !canGoNext()) return;
+    const totals = pendingTotals ?? { correct: correctCount, answered: answered };
+    setPendingTotals(null);
     if (index + 1 >= items.length) {
-      void finish(nextCorrect, nextAnswered);
+      void finish(totals.correct, totals.answered);
       return;
     }
-    window.setTimeout(() => {
-      setIndex((value) => value + 1);
-      setStatus("idle");
-      setMessage("");
-    }, 650);
+    setIndex((value) => value + 1);
+    setStatus("idle");
+    setMessage("");
+  }
+
+  function goBack() {
+    if (index <= 0 || submitting) return;
+    setPendingTotals(null);
+    setIndex((value) => value - 1);
+    setStatus("idle");
+    setMessage("");
+  }
+
+  function markReadyToAdvance(nextCorrect: number, nextAnswered: number, label: string) {
+    setCorrectCount(nextCorrect);
+    setAnswered(nextAnswered);
+    setStatus("correct");
+    setMessage(label);
+    setPendingTotals({ correct: nextCorrect, answered: nextAnswered });
   }
 
   function judgeChord(dots: number[]) {
@@ -136,14 +180,8 @@ export function LessonPlayer({ lesson }: Props) {
     const ok = sameDots(dots, current.dots);
     const reviewMode = lesson.type === "review";
     if (ok) {
-      const nextCorrect = correctCount + 1;
-      const nextAnswered = answered + 1;
-      setCorrectCount(nextCorrect);
-      setAnswered(nextAnswered);
-      setStatus("correct");
-      setMessage("Correct");
+      markReadyToAdvance(correctCount + 1, answered + 1, "Correct");
       feedback.correct(current.label);
-      advance(nextCorrect, nextAnswered);
       return;
     }
     feedback.wrong("Try again");
@@ -152,13 +190,14 @@ export function LessonPlayer({ lesson }: Props) {
     if (reviewMode) {
       const nextAnswered = answered + 1;
       setAnswered(nextAnswered);
-      window.setTimeout(() => advance(correctCount, nextAnswered), 900);
+      setPendingTotals({ correct: correctCount, answered: nextAnswered });
+      setMessage(`Not yet. Expected dots ${current.dots.join("-") || "none"}. Continue when ready.`);
       return;
     }
     window.setTimeout(() => {
       setStatus("idle");
       setMessage("");
-    }, 900);
+    }, 1200);
   }
 
   function judgeChoice(choice: string) {
@@ -166,14 +205,8 @@ export function LessonPlayer({ lesson }: Props) {
     const ok = choice === (current.answer ?? current.label);
     const reviewMode = lesson.type === "review";
     if (ok) {
-      const nextCorrect = correctCount + 1;
-      const nextAnswered = answered + 1;
-      setCorrectCount(nextCorrect);
-      setAnswered(nextAnswered);
-      setStatus("correct");
-      setMessage("Correct");
+      markReadyToAdvance(correctCount + 1, answered + 1, "Correct");
       feedback.correct(choice);
-      advance(nextCorrect, nextAnswered);
       return;
     }
     feedback.wrong("Try again");
@@ -182,13 +215,14 @@ export function LessonPlayer({ lesson }: Props) {
     if (reviewMode) {
       const nextAnswered = answered + 1;
       setAnswered(nextAnswered);
-      window.setTimeout(() => advance(correctCount, nextAnswered), 900);
+      setPendingTotals({ correct: correctCount, answered: nextAnswered });
+      setMessage(`Not ${choice}. Continue when ready.`);
       return;
     }
     window.setTimeout(() => {
       setStatus("idle");
       setMessage("");
-    }, 900);
+    }, 1200);
   }
 
   async function finish(finalCorrect: number, finalAnswered: number) {
@@ -304,6 +338,11 @@ export function LessonPlayer({ lesson }: Props) {
       <p className="page-copy">
         <strong>{lesson.content.instruction}</strong>
       </p>
+      {lesson.content.passage ? (
+        <blockquote className="story-passage" cite="lesson">
+          <strong>{lesson.content.passage}</strong>
+        </blockquote>
+      ) : null}
       {current?.note ? (
         <p className="meter">
           <strong>{current.note}</strong>
@@ -337,9 +376,7 @@ export function LessonPlayer({ lesson }: Props) {
             </button>
           </div>
           <TouchBraillePad mode={touchMode} />
-          <p className="meter">
-            Keyboard: Perkins F D S / J K L · Space ignored · release all keys to submit
-          </p>
+          <PerkinsKeyboard targetDots={current?.dots ?? []} interactive />
         </>
       ) : (
         <div className="choice-grid" role="group" aria-label="Answer choices">
@@ -367,6 +404,38 @@ export function LessonPlayer({ lesson }: Props) {
           <strong>{message}</strong>
         </p>
       ) : null}
+
+      <div className="lesson-item-nav" role="group" aria-label="Lesson item navigation">
+        <button
+          type="button"
+          className="lesson-arrow-btn"
+          onClick={goBack}
+          disabled={index <= 0 || submitting}
+          aria-label="Previous item"
+        >
+          <span aria-hidden="true">←</span>
+          <span>Back</span>
+        </button>
+        <p className="lesson-item-nav-meter">
+          <strong>
+            {index + 1} / {items.length}
+          </strong>
+        </p>
+        <button
+          type="button"
+          className="lesson-arrow-btn is-forward"
+          onClick={goNext}
+          disabled={submitting || !canGoNext()}
+          aria-label={index + 1 >= items.length ? "Finish lesson" : "Next item"}
+        >
+          <span>{index + 1 >= items.length ? "Finish" : "Next"}</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+      <p className="meter lesson-nav-hint">
+        <strong>Arrow keys</strong> also move Back / Next when an item is answered.
+      </p>
+
       {error ? (
         <p className="field-error" role="alert">
           {error}

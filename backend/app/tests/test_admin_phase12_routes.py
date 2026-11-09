@@ -13,6 +13,8 @@ def test_admin_phase12_routes_registered() -> None:
     assert "/api/admin/content/units" in paths
     assert "/api/admin/content/lessons/{lesson_id}" in paths
     assert "/api/admin/content/reseed" in paths
+    assert "/api/admin/content/export" in paths
+    assert "/api/admin/content/import" in paths
     assert "/api/admin/announcements" in paths
     assert "/api/admin/settings/signups" in paths
     assert "/api/admin/settings/general" in paths

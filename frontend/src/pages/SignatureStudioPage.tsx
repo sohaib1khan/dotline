@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CelebrationOverlay, type CelebrationPayload } from "@/components/CelebrationOverlay";
 import { Field, FormStatus } from "@/components/AuthForm";
-import { sampleGlyph, scoreAgainstGuide, type GlyphDef, type Point } from "@/features/cursive/geometry";
+import { scoreAgainstStroke, type GlyphDef, type Point } from "@/features/cursive/geometry";
 import { TraceScene3D } from "@/features/cursive/TraceScene3D";
 import { feedback } from "@/feedback";
 import { ApiError, apiGet, apiPost } from "@/lib/api";
@@ -19,11 +19,31 @@ type SavedSignature = {
   created_at: string;
 };
 
+function resolveGlyph(lib: StrokesPayload | null, ch: string): GlyphDef | null {
+  if (!lib) return null;
+  return lib.letters[ch] ?? lib.letters[ch.toLowerCase()] ?? lib.letters[ch.toUpperCase()] ?? null;
+}
+
+function strokeHint(letter: string, strokeIndex: number, total: number): string {
+  if (total <= 1) return `Trace ${letter}.`;
+  if (strokeIndex === 0) {
+    return `Stroke 1 of ${total} for “${letter}” — draw the main stem. Then lift your pen.`;
+  }
+  if (letter.toLowerCase() === "i" || letter.toLowerCase() === "j") {
+    return `Stroke ${strokeIndex + 1} of ${total} — lift and add the dot.`;
+  }
+  if (letter.toLowerCase() === "t" || letter.toLowerCase() === "f") {
+    return `Stroke ${strokeIndex + 1} of ${total} — lift and add the crossbar.`;
+  }
+  return `Stroke ${strokeIndex + 1} of ${total} — lift and continue the next part.`;
+}
+
 export function SignatureStudioPage() {
   const handedness = usePreferences((s) => s.settings.handedness);
   const [name, setName] = useState("");
   const [strokesLib, setStrokesLib] = useState<StrokesPayload | null>(null);
   const [letterIndex, setLetterIndex] = useState(0);
+  const [strokeIndex, setStrokeIndex] = useState(0);
   const [phase, setPhase] = useState<"letters" | "full" | "done">("letters");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -41,41 +61,59 @@ export function SignatureStudioPage() {
   );
 
   const currentLetter = letters[letterIndex] ?? null;
-  const glyph = currentLetter && strokesLib ? strokesLib.letters[currentLetter] : null;
+  const glyph = currentLetter ? resolveGlyph(strokesLib, currentLetter) : null;
+  const strokeCount = glyph?.strokes.length ?? 0;
+  const activeStroke = glyph?.strokes[strokeIndex] ?? null;
 
   useEffect(() => {
     void apiGet<StrokesPayload>("/api/cursive/strokes").then(setStrokesLib).catch(() => undefined);
     void apiGet<SavedSignature[]>("/api/cursive/signatures").then(setSaved).catch(() => undefined);
   }, []);
 
-  function onLetterStroke(points: Point[]) {
-    if (!glyph) return;
-    const result = scoreAgainstGuide(points, sampleGlyph(glyph.strokes));
-    setMessage(result.feedback);
-    if (result.score >= 55) {
-      feedback.correct(currentLetter ?? "Good");
-      if (letterIndex + 1 >= letters.length) {
-        setPhase("full");
-        setMessage("Now write your full signature freely.");
-        feedback.speak("Now write your full signature");
-      } else {
-        setLetterIndex((value) => value + 1);
-      }
-    } else {
-      feedback.wrong(result.feedback);
+  useEffect(() => {
+    setStrokeIndex(0);
+  }, [letterIndex, currentLetter]);
+
+  function advanceAfterLetter() {
+    if (letterIndex + 1 >= letters.length) {
+      setPhase("full");
+      setMessage("Now write your full signature freely.");
+      feedback.speak("Now write your full signature");
+      return;
     }
+    setLetterIndex((value) => value + 1);
+    setStrokeIndex(0);
+  }
+
+  function onLetterStroke(points: Point[]) {
+    if (!glyph || !activeStroke || !currentLetter) return;
+    const result = scoreAgainstStroke(points, activeStroke, {
+      startTolerance: 32,
+      shapeTolerance: 24,
+      minPoints: activeStroke.path.length < 28 ? 3 : 5,
+    });
+    setMessage(result.feedback);
+    if (result.score >= 50) {
+      if (strokeIndex + 1 < strokeCount) {
+        const next = strokeIndex + 1;
+        setStrokeIndex(next);
+        const hint = strokeHint(currentLetter, next, strokeCount);
+        setMessage(`Nice. ${hint}`);
+        feedback.correct("Good stroke");
+        feedback.speak(hint);
+        return;
+      }
+      feedback.correct(currentLetter);
+      setMessage(`“${currentLetter}” complete.`);
+      advanceAfterLetter();
+      return;
+    }
+    feedback.wrong(result.feedback);
   }
 
   async function saveSignature() {
     setError("");
     try {
-      const guide = letters
-        .map((ch) => strokesLib?.letters[ch])
-        .filter(Boolean)
-        .flatMap((g) => sampleGlyph(g!.strokes));
-      const scored = fullStroke.length
-        ? scoreAgainstGuide(fullStroke, guide.length ? guide : fullStroke)
-        : { score: 70, feedback: "Saved." };
       const result = await apiPost<{
         id: string;
         name_text: string;
@@ -90,7 +128,7 @@ export function SignatureStudioPage() {
       }>("/api/cursive/signatures", {
         name_text: name.trim(),
         strokes: fullStroke,
-        score: scored.score,
+        score: 70,
       });
       setSaved((prev) => [
         {
@@ -136,6 +174,7 @@ export function SignatureStudioPage() {
         onSubmit={(event) => {
           event.preventDefault();
           setLetterIndex(0);
+          setStrokeIndex(0);
           setPhase("letters");
           setFullStroke([]);
           setMessage("");
@@ -147,21 +186,66 @@ export function SignatureStudioPage() {
         </button>
       </form>
 
-      {letters.length > 0 && phase === "letters" && glyph ? (
+      {letters.length > 0 && phase === "letters" && glyph && activeStroke ? (
         <>
           <p className="meter">
             <strong>
               Letter {letterIndex + 1}/{letters.length}: {currentLetter}
             </strong>
+            {strokeCount > 1 ? ` · stroke ${strokeIndex + 1}/${strokeCount}` : ""}
+          </p>
+          <p className="page-copy">
+            <strong>{strokeHint(currentLetter ?? "", strokeIndex, strokeCount)}</strong>
           </p>
           <TraceScene3D
-            strokes={glyph.strokes}
+            strokes={[activeStroke]}
             mode="trace"
             mirror={handedness === "left"}
-            watchKey={`${currentLetter}-${letterIndex}`}
+            watchKey={`${currentLetter}-${letterIndex}-${strokeIndex}`}
             onStrokeEnd={onLetterStroke}
           />
+          <div className="demo-actions">
+            <button
+              type="button"
+              className="secondary-button"
+              disabled={letterIndex <= 0 && strokeIndex <= 0}
+              onClick={() => {
+                if (strokeIndex > 0) {
+                  setStrokeIndex((value) => value - 1);
+                  setMessage("");
+                  return;
+                }
+                if (letterIndex > 0) {
+                  setLetterIndex((value) => value - 1);
+                  setStrokeIndex(0);
+                  setMessage("");
+                }
+              }}
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                if (strokeIndex + 1 < strokeCount) {
+                  setStrokeIndex((value) => value + 1);
+                  setMessage("Skipped ahead — you can still practice this stroke.");
+                  return;
+                }
+                advanceAfterLetter();
+              }}
+            >
+              Skip stroke
+            </button>
+          </div>
         </>
+      ) : null}
+
+      {letters.length > 0 && phase === "letters" && !glyph && currentLetter ? (
+        <p className="field-error" role="alert">
+          <strong>No stroke guide for “{currentLetter}”.</strong> Try another letter.
+        </p>
       ) : null}
 
       {phase === "full" ? (
@@ -172,7 +256,7 @@ export function SignatureStudioPage() {
           <TraceScene3D
             strokes={
               letters
-                .map((ch) => strokesLib?.letters[ch]?.strokes[0])
+                .map((ch) => resolveGlyph(strokesLib, ch)?.strokes[0])
                 .filter(Boolean)
                 .map((stroke) => stroke!) ?? []
             }
@@ -180,7 +264,12 @@ export function SignatureStudioPage() {
             mirror={handedness === "left"}
             onStrokeEnd={(points) => setFullStroke(points)}
           />
-          <button className="primary-button" type="button" onClick={() => void saveSignature()} disabled={!fullStroke.length}>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={() => void saveSignature()}
+            disabled={!fullStroke.length}
+          >
             Save signature
           </button>
         </>

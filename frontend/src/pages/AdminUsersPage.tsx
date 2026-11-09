@@ -166,7 +166,12 @@ export function AdminUsersPage() {
                   </strong>
                 </span>
                 <span className="inbox-item-meta">
-                  @{row.username} · {row.role} · {row.is_active ? "active" : "disabled"}
+                  @{row.username} · {row.role} ·{" "}
+                  {row.is_active
+                    ? "active"
+                    : row.last_login_at
+                      ? "disabled"
+                      : "pending approval"}
                 </span>
               </button>
             </li>
@@ -193,17 +198,25 @@ export function AdminUsersPage() {
               <div className="cta-row" style={{ justifyContent: "flex-start" }}>
                 <button
                   type="button"
-                  className="secondary-button"
+                  className={detail.is_active ? "secondary-button" : "primary-button"}
                   disabled={busy}
                   onClick={() =>
                     void runAction(
                       `/api/admin/users/${detail.id}/active`,
                       { is_active: !detail.is_active },
-                      detail.is_active ? "User disabled." : "User enabled.",
+                      detail.is_active
+                        ? "User disabled."
+                        : detail.last_login_at
+                          ? "User enabled."
+                          : "User approved — they can log in now.",
                     )
                   }
                 >
-                  {detail.is_active ? "Disable" : "Enable"}
+                  {detail.is_active
+                    ? "Disable"
+                    : detail.last_login_at
+                      ? "Enable"
+                      : "Approve"}
                 </button>
                 <button
                   type="button"

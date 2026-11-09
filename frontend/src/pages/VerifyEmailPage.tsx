@@ -29,7 +29,7 @@ export function VerifyEmailPage() {
         } catch {
           // Keep defaults.
         }
-        navigate(me.user.role === "admin" ? "/admin/settings/email" : "/tracks", {
+        navigate(me.user.role === "admin" ? "/admin" : "/tracks", {
           replace: true,
         });
       } catch (err) {

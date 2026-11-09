@@ -399,16 +399,18 @@ export function SettingsPage() {
           <button
             className="secondary-button"
             type="button"
-            onClick={() => feedback.speak("Dotline speech is working at your chosen rate.")}
+            onClick={() =>
+              feedback.speak("Dotline speech is working. Pick a natural voice if this still sounds robotic.")
+            }
           >
             Test speech
           </button>
           <button
             className="secondary-button"
             type="button"
-            onClick={() => feedback.correct("Sound test")}
+            onClick={() => feedback.correct("Soft sound test")}
           >
-            Test sound
+            Test soft sound
           </button>
           <button className="primary-button" type="submit" disabled={busy}>
             Save sound & speech

@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CelebrationOverlay, type CelebrationPayload } from "@/components/CelebrationOverlay";
-import { sampleGlyph, scoreAgainstGuide, type GlyphDef, type Point } from "@/features/cursive/geometry";
+import {
+  sampleGlyph,
+  scoreAgainstGuide,
+  scoreAgainstStroke,
+  type GlyphDef,
+  type Point,
+} from "@/features/cursive/geometry";
 import { TraceScene3D } from "@/features/cursive/TraceScene3D";
 import type { TraceMode } from "@/features/cursive/TraceCanvas";
 import { feedback } from "@/feedback";
@@ -25,6 +31,8 @@ type LessonDetail = {
   content: {
     instruction?: string;
     pass_score?: number;
+    passage?: string;
+    passage_speak?: string;
     studio_path?: string;
     items?: LessonItem[];
   };
@@ -63,6 +71,7 @@ export function CursiveLessonPlayer({ lesson }: { lesson: LessonDetail }) {
   const [celebration, setCelebration] = useState<CelebrationPayload | null>(null);
   const [pending, setPending] = useState<CelebrationPayload[]>([]);
   const [glow, setGlow] = useState(false);
+  const [strokeIndex, setStrokeIndex] = useState(0);
 
   useEffect(() => {
     void apiGet<StrokesPayload>("/api/cursive/strokes")
@@ -76,6 +85,7 @@ export function CursiveLessonPlayer({ lesson }: { lesson: LessonDetail }) {
     setScores([]);
     setDone(null);
     setMessage("");
+    setStrokeIndex(0);
   }, [lesson.id, lesson.type]);
 
   const current = items[index] ?? null;
@@ -86,15 +96,24 @@ export function CursiveLessonPlayer({ lesson }: { lesson: LessonDetail }) {
   }, [strokesLib, current]);
 
   useEffect(() => {
+    setStrokeIndex(0);
+  }, [index, current?.id]);
+
+  useEffect(() => {
+    if (index === 0 && stage === "watch" && lesson.content.passage_speak) {
+      feedback.speak(lesson.content.passage_speak);
+      return;
+    }
     if (!glyph || !current) return;
     feedback.speak(glyph.speak || current.label);
-  }, [glyph, current, stage, index]);
+  }, [glyph, current, stage, index, lesson.content.passage_speak]);
 
   function nextAfterPass(score: number) {
     const nextScores = [...scores, score];
     if (lesson.type !== "review" && stage !== "free") {
       const stageIndex = STAGE_ORDER.indexOf(stage);
       setStage(STAGE_ORDER[stageIndex + 1] ?? "free");
+      setStrokeIndex(0);
       setMessage("");
       return;
     }
@@ -104,16 +123,45 @@ export function CursiveLessonPlayer({ lesson }: { lesson: LessonDetail }) {
       return;
     }
     setIndex((value) => value + 1);
+    setStrokeIndex(0);
     setStage(lesson.type === "review" ? "trace" : "watch");
     setMessage("");
   }
 
   function onStrokeEnd(points: Point[]) {
     if (!glyph || stage === "watch") return;
+    // Multi-stroke letters (i, t, j…) stay stroke-by-stroke in free write too.
+    if (glyph.strokes.length > 1) {
+      const active = glyph.strokes[strokeIndex]!;
+      const result = scoreAgainstStroke(points, active, {
+        startTolerance: stage === "free" ? 36 : 30,
+        shapeTolerance: stage === "free" ? 26 : 22,
+        minPoints: active.path.length < 28 ? 3 : 5,
+      });
+      setMessage(result.feedback);
+      if (result.score >= 48) {
+        if (strokeIndex + 1 < glyph.strokes.length) {
+          setStrokeIndex((value) => value + 1);
+          setMessage("Nice — lift your pen, then add the next stroke.");
+          feedback.correct("Good stroke");
+          feedback.speak("Lift, then continue.");
+          return;
+        }
+        feedback.correct(result.feedback);
+        nextAfterPass(result.score);
+        return;
+      }
+      feedback.wrong(result.feedback);
+      return;
+    }
+
     const guide = sampleGlyph(glyph.strokes);
-    const result = scoreAgainstGuide(points, guide);
+    const result = scoreAgainstGuide(points, guide, {
+      startTolerance: stage === "free" ? 34 : 26,
+      shapeTolerance: stage === "free" ? 24 : 18,
+    });
     setMessage(result.feedback);
-    if (result.score >= 55) {
+    if (result.score >= 52) {
       feedback.correct(result.feedback);
       nextAfterPass(result.score);
     } else {
@@ -219,6 +267,9 @@ export function CursiveLessonPlayer({ lesson }: { lesson: LessonDetail }) {
           {current.label} · stage {stage}
         </strong>{" "}
         · item {index + 1}/{items.length}
+        {glyph.strokes.length > 1 && stage !== "watch"
+          ? ` · stroke ${strokeIndex + 1}/${glyph.strokes.length}`
+          : ""}
       </p>
       <h2 id="cursive-item-title" className="page-title">
         {current.label}
@@ -226,19 +277,30 @@ export function CursiveLessonPlayer({ lesson }: { lesson: LessonDetail }) {
       <p className="page-copy">
         <strong>{lesson.content.instruction}</strong>
       </p>
+      {lesson.content.passage ? (
+        <blockquote className="story-passage">
+          <strong>{lesson.content.passage}</strong>
+        </blockquote>
+      ) : null}
       <p className="meter">
         {stage === "watch"
-          ? "Watch the ghost pen, then continue."
-          : stage === "trace"
-            ? "Trace the glowing guide."
-            : "Free write — faint guide only."}
+          ? "Watch the looping ghost pen, then continue."
+          : glyph.strokes.length > 1
+            ? `Stroke ${strokeIndex + 1} of ${glyph.strokes.length} — follow the live guide. Lift between strokes.`
+            : stage === "trace"
+              ? "Trace along the live ghost pen."
+              : "Free write — follow the live ghost pen."}
       </p>
       <div className={`trace-wrap${glow ? " is-offpath" : ""}`}>
         <TraceScene3D
-          strokes={glyph.strokes}
+          strokes={
+            glyph.strokes.length > 1 && stage !== "watch"
+              ? [glyph.strokes[strokeIndex]!]
+              : glyph.strokes
+          }
           mode={stage}
           mirror={handedness === "left"}
-          watchKey={`${current.id}-${stage}`}
+          watchKey={`${current.id}-${stage}-${strokeIndex}`}
           onOffPath={() => {
             setGlow(true);
             window.setTimeout(() => setGlow(false), 220);

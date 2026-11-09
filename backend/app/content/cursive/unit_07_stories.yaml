@@ -1,0 +1,52 @@
+order: 7
+title: Short stories
+description: Trace letters that build tiny stories. Edit this YAML (or the course pack) to add more passages.
+lessons:
+  - order: 1
+    title: "Story — me and you"
+    type: story
+    xp_reward: 30
+    content:
+      instruction: "Trace each letter from the story."
+      passage: "me and you"
+      passage_speak: "me and you"
+      items:
+        - { id: m, kind: letter, key: m, label: "m in me" }
+        - { id: e, kind: letter, key: e, label: "e in me" }
+        - { id: a, kind: letter, key: a, label: "a in and" }
+        - { id: n, kind: letter, key: n, label: "n in and" }
+        - { id: d, kind: letter, key: d, label: "d in and" }
+        - { id: y, kind: letter, key: y, label: "y in you" }
+        - { id: o, kind: letter, key: o, label: "o in you" }
+        - { id: u, kind: letter, key: u, label: "u in you" }
+  - order: 2
+    title: "Story — a cat sat"
+    type: story
+    xp_reward: 30
+    content:
+      instruction: "Trace the letters for this line."
+      passage: "a cat sat"
+      passage_speak: "a cat sat"
+      items:
+        - { id: a1, kind: letter, key: a, label: "a" }
+        - { id: c, kind: letter, key: c, label: "c in cat" }
+        - { id: a2, kind: letter, key: a, label: "a in cat" }
+        - { id: t1, kind: letter, key: t, label: "t in cat" }
+        - { id: s, kind: letter, key: s, label: "s in sat" }
+        - { id: a3, kind: letter, key: a, label: "a in sat" }
+        - { id: t2, kind: letter, key: t, label: "t in sat" }
+  - order: 3
+    title: "Stories review"
+    type: review
+    xp_reward: 40
+    content:
+      instruction: "Letters from the short stories. Need 80% to pass."
+      pass_score: 80
+      passage: "me and you · a cat sat"
+      items:
+        - { id: rv1, kind: letter, key: m, label: m }
+        - { id: rv2, kind: letter, key: e, label: e }
+        - { id: rv3, kind: letter, key: n, label: n }
+        - { id: rv4, kind: letter, key: c, label: c }
+        - { id: rv5, kind: letter, key: a, label: a }
+        - { id: rv6, kind: letter, key: t, label: t }

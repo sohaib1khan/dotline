@@ -28,13 +28,16 @@ def send_email(
     if not api_key or not from_email:
         raise EmailError("Email is not configured")
 
-    payload = {
+    payload: dict = {
         "from": f"{from_name} <{from_email}>",
         "to": [to],
         "subject": subject,
         "html": html,
         "text": text,
     }
+    reply_to = settings_service.get_setting(db, settings_service.KEY_REPLY_TO)
+    if reply_to:
+        payload["reply_to"] = reply_to
     try:
         response = httpx.post(
             "https://api.resend.com/emails",

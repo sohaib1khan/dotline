@@ -20,7 +20,7 @@ def build_statusboard(db: Session, user: User) -> dict:
     streak = streak_service.streak_snapshot(db, user.id)
     xp = xp_service.xp_summary(db, user.id)
     latest_badges = badge_service.list_user_badges(db, user.id, limit=6)
-    enrolled = track_service.list_tracks(db, user.id)
+    enrolled = track_service.list_tracks_for_user(db, user)
     active_seconds = streak_service.today_active_seconds(db, user.id)
     goal_minutes = settings.daily_goal_minutes
     goal_seconds = max(1, goal_minutes * 60)

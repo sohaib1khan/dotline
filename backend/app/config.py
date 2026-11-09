@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     postgres_host: str = "db"
     postgres_port: int = 5432
 
+    # Writable overlay for imported course YAML (falls back to packaged content)
+    content_data_dir: str = "/app/data/content"
+
     @property
     def database_url(self) -> str:
         return (

@@ -13,6 +13,7 @@ import { validatePersonName, validateUsername } from "@/lib/validation";
 type SignupStatus = {
   signups_open: boolean;
   email_configured: boolean;
+  gate_mode?: "closed" | "admin" | "email" | "open";
   message: string | null;
 };
 
@@ -38,6 +39,7 @@ export function SignupPage() {
       setStatus({
         signups_open: false,
         email_configured: false,
+        gate_mode: "closed",
         message: "Sign-ups are temporarily closed.",
       });
     });
@@ -64,6 +66,7 @@ export function SignupPage() {
       const result = await apiPost<{
         message: string;
         verification_required?: boolean;
+        pending_approval?: boolean;
       }>("/api/auth/signup", {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -97,10 +100,7 @@ export function SignupPage() {
       <AuthShell title="Sign up">
         <div className="banner" role="status">
           <strong>{status.message ?? "Sign-ups are temporarily closed."}</strong>
-          <p>
-            An admin can open sign-ups later from Admin → Settings → Email after configuring
-            Resend.
-          </p>
+          <p>An admin can open sign-ups later from Admin → Settings.</p>
         </div>
         <p className="auth-links">
           <Link to="/login">Log in</Link>
@@ -109,8 +109,22 @@ export function SignupPage() {
     );
   }
 
+  const gateHint =
+    status?.gate_mode === "admin"
+      ? "After you sign up, an admin must approve your account before you can log in."
+      : status?.gate_mode === "email"
+        ? "We will email you a confirmation link so you can finish creating your account."
+        : status?.gate_mode === "open"
+          ? "You can log in right after creating your account."
+          : null;
+
   return (
     <AuthShell title="Create your account">
+      {gateHint ? (
+        <div className="banner" role="status">
+          <strong>{gateHint}</strong>
+        </div>
+      ) : null}
       <form className="setup-form" onSubmit={onSubmit} noValidate>
         <Field
           id="first_name"

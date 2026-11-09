@@ -1,44 +1,66 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { BrandMark } from "@/components/BrandMark";
 import { apiGet } from "@/lib/api";
+import { applyRoomTheme, roomFromPath, type RoomTrack } from "@/store/room";
 import { useAuth } from "@/store/auth";
 
-type NavItem = { to: string; label: string; track?: "braille" | "cursive"; badge?: boolean };
-
-const LEARNER_ITEMS: NavItem[] = [
-  { to: "/app", label: "Statusboard" },
-  { to: "/app/braille", label: "Braille", track: "braille" },
-  { to: "/app/cursive", label: "Cursive", track: "cursive" },
-  { to: "/app/games", label: "Games" },
-  { to: "/app/progress", label: "Progress" },
-  { to: "/app/inbox", label: "Inbox", badge: true },
-  { to: "/app/report", label: "Report" },
-  { to: "/app/settings", label: "Settings" },
-];
+type NavItem = { to: string; label: string; end?: boolean; badge?: boolean };
 
 const ADMIN_ITEMS: NavItem[] = [
-  { to: "/admin", label: "Dashboard" },
-  { to: "/admin/monitoring", label: "Monitoring" },
+  { to: "/admin", label: "Console", end: true },
+  { to: "/admin/settings", label: "Resend & settings" },
+  { to: "/admin/content", label: "Course content" },
   { to: "/admin/users", label: "Users" },
-  { to: "/admin/content", label: "Content" },
+  { to: "/admin/monitoring", label: "Monitoring" },
   { to: "/admin/bugs", label: "Bugs" },
   { to: "/admin/announcements", label: "Announce" },
-  { to: "/admin/settings", label: "Settings" },
   { to: "/admin/debug/input", label: "Input debug" },
   { to: "/admin/debug/xp", label: "XP debug" },
 ];
 
+function learnerItems(room: RoomTrack | null, isAdmin: boolean): NavItem[] {
+  const preview = isAdmin
+    ? [{ to: "/admin", label: "Admin console", end: true as const }]
+    : [];
+  if (!room) {
+    return [
+      ...preview,
+      { to: "/app", label: "Rooms", end: true },
+      { to: "/app/inbox", label: "Inbox", badge: true },
+      { to: "/app/settings", label: "Settings" },
+    ];
+  }
+  const roomHome = `/app/rooms/${room}`;
+  const trackPath = `/app/${room}`;
+  return [
+    ...preview,
+    { to: roomHome, label: "Statusboard", end: true },
+    { to: trackPath, label: room === "braille" ? "Braille lessons" : "Cursive lessons" },
+    { to: "/app/games", label: "Games" },
+    { to: "/app/progress", label: "Progress" },
+    { to: "/app/inbox", label: "Inbox", badge: true },
+    { to: "/app/report", label: "Report" },
+    { to: "/app/settings", label: "Settings" },
+    { to: "/app", label: "Change room" },
+  ];
+}
+
 export function AppNav({ mode }: { mode: "learner" | "admin" }) {
   const logout = useAuth((s) => s.logout);
-  const [tracks, setTracks] = useState<string[]>([]);
+  const user = useAuth((s) => s.user);
+  const location = useLocation();
+  const room = mode === "learner" ? roomFromPath(location.pathname) : null;
+  const isAdmin = user?.role === "admin";
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
-    if (mode !== "learner") return;
-    void apiGet<{ tracks: string[] }>("/api/me/tracks")
-      .then((data) => setTracks(data.tracks))
-      .catch(() => setTracks([]));
-  }, [mode]);
+    if (mode === "learner") applyRoomTheme(room);
+    else applyRoomTheme(null);
+    return () => {
+      if (mode === "learner") applyRoomTheme(null);
+    };
+  }, [mode, room]);
 
   useEffect(() => {
     if (mode !== "learner") return;
@@ -64,19 +86,34 @@ export function AppNav({ mode }: { mode: "learner" | "admin" }) {
     };
   }, [mode]);
 
-  const items =
-    mode === "admin"
-      ? ADMIN_ITEMS
-      : LEARNER_ITEMS.filter((item) => !item.track || tracks.includes(item.track));
+  const items = mode === "admin" ? ADMIN_ITEMS : learnerItems(room, Boolean(isAdmin));
 
   return (
-    <nav className="nav-rail" aria-label={mode === "admin" ? "Admin navigation" : "Learner navigation"}>
-      <p className="nav-brand">Dotline</p>
+    <nav
+      className={`nav-rail${mode === "admin" ? " nav-rail-admin" : ""}`}
+      aria-label={mode === "admin" ? "Admin navigation" : "Learner navigation"}
+    >
+      <p className="nav-brand">
+        <BrandMark
+          title={mode === "admin" ? "Dotline Admin" : "Dotline"}
+          to={mode === "admin" ? "/admin" : "/app"}
+        />
+      </p>
+      {mode === "admin" ? (
+        <p className="nav-admin-tag">
+          <strong>Control panel</strong>
+        </p>
+      ) : null}
+      {mode === "learner" && isAdmin ? (
+        <p className="nav-preview-banner" role="status">
+          <strong>Learner preview</strong>
+        </p>
+      ) : null}
       {items.map((item) => (
         <NavLink
-          key={item.to}
+          key={`${item.to}-${item.label}`}
           to={item.to}
-          end={item.to === "/app" || item.to === "/admin"}
+          end={item.end}
           className={({ isActive }) => `nav-link${isActive ? " is-active" : ""}`}
         >
           <span>{item.label}</span>
@@ -88,8 +125,8 @@ export function AppNav({ mode }: { mode: "learner" | "admin" }) {
         </NavLink>
       ))}
       {mode === "admin" ? (
-        <NavLink to="/app" className="nav-link">
-          Learner view
+        <NavLink to="/app" className="nav-link nav-link-muted">
+          Preview learner
         </NavLink>
       ) : null}
       <button

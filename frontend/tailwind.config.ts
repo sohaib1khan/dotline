@@ -6,6 +6,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['"Atkinson Hyperlegible"', "system-ui", "sans-serif"],
+        display: ['"Fraunces"', '"Atkinson Hyperlegible"', "Georgia", "serif"],
       },
       colors: {
         surface: "var(--color-surface)",

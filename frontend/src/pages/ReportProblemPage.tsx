@@ -1,8 +1,7 @@
 import { useEffect, useId, useState, type FormEvent } from "react";
-import { useLocation } from "react-router-dom";
 import { getConnectedGamepads } from "@/feedback";
 import { ApiError, apiGet, apiPost } from "@/lib/api";
-import { buildBugContext } from "@/lib/telemetry";
+import { buildBugContext, getProblemRoute, getProblemTitle } from "@/lib/telemetry";
 import { usePreferences } from "@/store/preferences";
 
 type Category = { id: string; label: string };
@@ -16,16 +15,7 @@ type BugPublic = {
   created_at: string;
 };
 
-function lessonOrGameFromPath(pathname: string): string | null {
-  const match = pathname.match(/\/(braille|cursive)\/lessons\/([^/]+)/);
-  if (match) return `${match[1]} lesson ${match[2]}`;
-  const game = pathname.match(/\/games\/([^/]+)/);
-  if (game) return `game ${game[1]}`;
-  return null;
-}
-
 export function ReportProblemPage() {
-  const location = useLocation();
   const settings = usePreferences((s) => s.settings);
   const descId = useId();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -36,9 +26,17 @@ export function ReportProblemPage() {
   const [success, setSuccess] = useState("");
   const [busy, setBusy] = useState(false);
   const [mine, setMine] = useState<BugPublic[]>([]);
-  const lessonOrGame = lessonOrGameFromPath(location.pathname);
+  const [tick, setTick] = useState(0);
+
+  // Refresh preview when expanding context or after navigation settles.
+  useEffect(() => {
+    if (!showContext) return;
+    const id = window.setInterval(() => setTick((value) => value + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [showContext]);
 
   function currentContext() {
+    void tick;
     return buildBugContext({
       settings: {
         theme: settings.theme,
@@ -48,11 +46,13 @@ export function ReportProblemPage() {
         volume: settings.volume,
         sfx_enabled: settings.sfx_enabled,
         speech_enabled: settings.speech_enabled,
+        speech_rate: settings.speech_rate,
         haptics_enabled: settings.haptics_enabled,
+        haptics_intensity: settings.haptics_intensity,
         handedness: settings.handedness,
+        daily_goal_minutes: settings.daily_goal_minutes,
       },
       gamepadId: getConnectedGamepads()[0]?.id ?? null,
-      lessonOrGame,
     });
   }
 
@@ -95,12 +95,19 @@ export function ReportProblemPage() {
     }
   }
 
+  const problemPath = getProblemRoute();
+  const problemTitle = getProblemTitle();
+
   return (
     <section aria-labelledby="report-title">
       <h1 id="report-title" className="page-title">
         Report a Problem
       </h1>
       <p className="lede">Three steps: pick a category, optionally describe it, then send.</p>
+      <p className="page-copy">
+        <strong>Reporting about:</strong> {problemTitle || "Dotline"}{" "}
+        <span className="meter">({problemPath})</span>
+      </p>
 
       {success ? (
         <div className="banner" role="status">
@@ -152,6 +159,10 @@ export function ReportProblemPage() {
           onToggle={(event) => setShowContext((event.target as HTMLDetailsElement).open)}
         >
           <summary className="secondary-button link-button">What we&apos;ll send</summary>
+          <p className="meter">
+            <strong>Includes the page you came from</strong>, route history, clicks, errors, device,
+            and settings — not just this report form.
+          </p>
           <pre className="report-context-pre" tabIndex={0}>
             {JSON.stringify(showContext ? currentContext() : {}, null, 2)}
           </pre>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { BrandMark } from "@/components/BrandMark";
 import { CursiveLessonPlayer } from "@/features/cursive/CursiveLessonPlayer";
 import { ApiError, apiGet } from "@/lib/api";
 
@@ -12,6 +13,8 @@ type LessonDetail = {
   content: {
     instruction?: string;
     pass_score?: number;
+    passage?: string;
+    passage_speak?: string;
     studio_path?: string;
     items?: { id: string; kind: "letter" | "warmup"; key: string; label: string }[];
   };
@@ -36,9 +39,12 @@ export function CursiveLessonPage() {
 
   return (
     <section className="braille-lesson" aria-labelledby="cursive-lesson-title">
-      <p className="meter">
-        <Link to="/app/cursive">← Cursive units</Link>
-      </p>
+      <div className="lesson-topbar">
+        <BrandMark to="/app" className="lesson-home-mark" />
+        <p className="meter">
+          <Link to="/app/cursive">← Cursive units</Link>
+        </p>
+      </div>
       {error ? (
         <p className="field-error" role="alert">
           {error}

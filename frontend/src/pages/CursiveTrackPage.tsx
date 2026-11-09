@@ -92,19 +92,25 @@ export function CursiveTrackPage() {
                           · {statusLabel(lesson.status)}
                         </span>
                       ) : lesson.type === "signature" ? (
-                        <Link to="/app/cursive/signature">
+                        <Link className="progress-lesson-link" to="/app/cursive/signature">
                           <strong>
                             {lesson.order}. {lesson.title}
                           </strong>{" "}
                           · {statusLabel(lesson.status)}
+                          {lesson.status === "mastered" || lesson.status === "completed"
+                            ? " · Replay"
+                            : ""}
                         </Link>
                       ) : (
-                        <Link to={`/app/cursive/lessons/${lesson.id}`}>
+                        <Link className="progress-lesson-link" to={`/app/cursive/lessons/${lesson.id}`}>
                           <strong>
                             {lesson.order}. {lesson.title}
                           </strong>{" "}
                           · {statusLabel(lesson.status)}
                           {lesson.best_score != null ? ` · best ${Math.round(lesson.best_score)}%` : ""}
+                          {lesson.status === "mastered" || lesson.status === "completed"
+                            ? " · Replay"
+                            : ""}
                         </Link>
                       )}
                     </li>

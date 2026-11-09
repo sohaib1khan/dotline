@@ -75,17 +75,18 @@ letters:
     speak: i
     case: lower
     strokes:
-    - path: M 70 128 C 78 110 82 90 86 70 L 90 128
+    # Undercurve entry → up → down. Dot is a second stroke (lift the pen).
+    - path: M 58 122 C 70 132 86 122 92 95 C 96 78 97 65 98 58 C 99 78 100 105 104 128
       direction: forward
-    - path: M 88 52 L 88 58
+    - path: M 96 42 L 96 50
       direction: forward
   t:
     speak: t
     case: lower
     strokes:
-    - path: M 70 128 C 78 100 82 70 86 40 L 90 128
+    - path: M 58 128 C 72 120 84 90 90 42 C 92 70 94 100 98 128
       direction: forward
-    - path: M 70 70 L 105 70
+    - path: M 70 72 L 112 72
       direction: forward
   u:
     speak: u
@@ -178,19 +179,13 @@ letters:
     speak: n
     case: lower
     strokes:
-    - path: M 60 70 L 65 128
-      direction: forward
-    - path: M 65 85 C 85 65 115 70 120 95 L 124 128
+    - path: M 58 128 L 62 70 C 78 48 108 50 118 78 L 122 128
       direction: forward
   m:
     speak: m
     case: lower
     strokes:
-    - path: M 55 70 L 58 128
-      direction: forward
-    - path: M 58 85 C 75 65 95 70 100 95
-      direction: forward
-    - path: M 100 85 C 118 65 140 72 144 98 L 146 128
+    - path: M 48 128 L 52 70 C 66 48 90 50 98 78 C 112 50 136 54 144 82 L 148 128
       direction: forward
   v:
     speak: v

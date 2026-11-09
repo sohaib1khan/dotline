@@ -9,7 +9,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.user import Track, UserTrack
+from app.models.user import Track, User, UserRole, UserTrack
 
 VALID_TRACKS = {Track.BRAILLE.value, Track.CURSIVE.value}
 
@@ -19,6 +19,14 @@ def list_tracks(db: Session, user_id: uuid.UUID) -> list[str]:
         select(UserTrack.track).where(UserTrack.user_id == user_id).order_by(UserTrack.track)
     ).all()
     return list(rows)
+
+
+def list_tracks_for_user(db: Session, user: User) -> list[str]:
+    """Enrolled tracks. Admins always see both rooms so learner preview works."""
+    enrolled = list_tracks(db, user.id)
+    if user.role == UserRole.ADMIN.value:
+        return sorted(VALID_TRACKS)
+    return enrolled
 
 
 def set_tracks(db: Session, user_id: uuid.UUID, tracks: list[str]) -> list[str]:
