@@ -1,0 +1,173 @@
+order: 1
+title: Meet the Cell
+description: Learn the six braille dots and how to press each one.
+lessons:
+  - order: 1
+    title: "Dot 1"
+    type: learn
+    xp_reward: 10
+    content:
+      instruction: "Dot 1 is the top-left. Press only dot 1 (F key or top-left pad)."
+      items:
+        - id: dot1
+          label: "Dot 1"
+          speak: "Dot 1"
+          dots: [1]
+          show_cell: true
+  - order: 2
+    title: "Dot 2"
+    type: learn
+    xp_reward: 10
+    content:
+      instruction: "Dot 2 is middle-left. Press only dot 2 (D key)."
+      items:
+        - id: dot2
+          label: "Dot 2"
+          speak: "Dot 2"
+          dots: [2]
+          show_cell: true
+  - order: 3
+    title: "Dot 3"
+    type: learn
+    xp_reward: 10
+    content:
+      instruction: "Dot 3 is bottom-left. Press only dot 3 (S key)."
+      items:
+        - id: dot3
+          label: "Dot 3"
+          speak: "Dot 3"
+          dots: [3]
+          show_cell: true
+  - order: 4
+    title: "Dot 4"
+    type: learn
+    xp_reward: 10
+    content:
+      instruction: "Dot 4 is top-right. Press only dot 4 (J key)."
+      items:
+        - id: dot4
+          label: "Dot 4"
+          speak: "Dot 4"
+          dots: [4]
+          show_cell: true
+  - order: 5
+    title: "Dot 5"
+    type: learn
+    xp_reward: 10
+    content:
+      instruction: "Dot 5 is middle-right. Press only dot 5 (K key)."
+      items:
+        - id: dot5
+          label: "Dot 5"
+          speak: "Dot 5"
+          dots: [5]
+          show_cell: true
+  - order: 6
+    title: "Dot 6"
+    type: learn
+    xp_reward: 10
+    content:
+      instruction: "Dot 6 is bottom-right. Press only dot 6 (L key)."
+      items:
+        - id: dot6
+          label: "Dot 6"
+          speak: "Dot 6"
+          dots: [6]
+          show_cell: true
+  - order: 7
+    title: "Find the dots"
+    type: write
+    xp_reward: 15
+    content:
+      instruction: "Type each named dot when you hear it."
+      items:
+        - id: w1
+          label: "Dot 1"
+          speak: "Dot 1"
+          dots: [1]
+          show_cell: false
+        - id: w2
+          label: "Dot 4"
+          speak: "Dot 4"
+          dots: [4]
+          show_cell: false
+        - id: w3
+          label: "Dot 3"
+          speak: "Dot 3"
+          dots: [3]
+          show_cell: false
+        - id: w4
+          label: "Dot 6"
+          speak: "Dot 6"
+          dots: [6]
+          show_cell: false
+  - order: 8
+    title: "Read the cell"
+    type: read
+    xp_reward: 15
+    content:
+      instruction: "Look at the raised dots. Choose which single dot is raised."
+      items:
+        - id: r1
+          label: "Dot 2"
+          speak: "Which single dot is raised?"
+          dots: [2]
+          show_cell: true
+          choices: ["Dot 1", "Dot 2", "Dot 3", "Dot 5"]
+          answer: "Dot 2"
+        - id: r2
+          label: "Dot 5"
+          speak: "Which single dot is raised?"
+          dots: [5]
+          show_cell: true
+          choices: ["Dot 4", "Dot 5", "Dot 6", "Dot 1"]
+          answer: "Dot 5"
+        - id: r3
+          label: "Dot 3"
+          speak: "Which single dot is raised?"
+          dots: [3]
+          show_cell: true
+          choices: ["Dot 2", "Dot 3", "Dot 6", "Dot 4"]
+          answer: "Dot 3"
+  - order: 9
+    title: "Unit 1 review"
+    type: review
+    xp_reward: 25
+    content:
+      instruction: "Mixed practice. Score 80% or higher to unlock the next unit."
+      pass_score: 80
+      items:
+        - id: rv1
+          kind: write
+          label: "Dot 1"
+          speak: "Dot 1"
+          dots: [1]
+          show_cell: false
+        - id: rv2
+          kind: write
+          label: "Dot 5"
+          speak: "Dot 5"
+          dots: [5]
+          show_cell: false
+        - id: rv3
+          kind: read
+          label: "Dot 4"
+          speak: "Which single dot is raised?"
+          dots: [4]
+          show_cell: true
+          choices: ["Dot 1", "Dot 4", "Dot 6", "Dot 2"]
+          answer: "Dot 4"
+        - id: rv4
+          kind: write
+          label: "Dot 6"
+          speak: "Dot 6"
+          dots: [6]
+          show_cell: false
+        - id: rv5
+          kind: read
+          label: "Dot 2"
+          speak: "Which single dot is raised?"
+          dots: [2]
+          show_cell: true
+          choices: ["Dot 2", "Dot 3", "Dot 5", "Dot 1"]
+          answer: "Dot 2"

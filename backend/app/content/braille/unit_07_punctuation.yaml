@@ -1,0 +1,54 @@
+order: 7
+title: Basic punctuation
+description: Period, comma, question mark, exclamation, apostrophe, and hyphen.
+lessons:
+  - order: 1
+    title: "Learn punctuation"
+    type: learn
+    xp_reward: 20
+    content:
+      instruction: "Copy each punctuation cell."
+      items:
+        - { id: period, label: "period", speak: "period", dots: [2, 5, 6], show_cell: true }
+        - { id: comma, label: "comma", speak: "comma", dots: [2], show_cell: true }
+        - { id: question, label: "question mark", speak: "question mark", dots: [2, 3, 6], show_cell: true }
+        - { id: exclamation, label: "exclamation mark", speak: "exclamation mark", dots: [2, 3, 5], show_cell: true }
+        - { id: apostrophe, label: "apostrophe", speak: "apostrophe", dots: [3], show_cell: true }
+        - { id: hyphen, label: "hyphen", speak: "hyphen", dots: [3, 6], show_cell: true }
+  - order: 2
+    title: "Write punctuation"
+    type: write
+    xp_reward: 20
+    content:
+      instruction: "Type each punctuation mark you hear."
+      items:
+        - { id: w1, label: "comma", speak: "comma", dots: [2], show_cell: false }
+        - { id: w2, label: "period", speak: "period", dots: [2, 5, 6], show_cell: false }
+        - { id: w3, label: "question mark", speak: "question mark", dots: [2, 3, 6], show_cell: false }
+        - { id: w4, label: "hyphen", speak: "hyphen", dots: [3, 6], show_cell: false }
+        - { id: w5, label: "exclamation mark", speak: "exclamation mark", dots: [2, 3, 5], show_cell: false }
+        - { id: w6, label: "apostrophe", speak: "apostrophe", dots: [3], show_cell: false }
+  - order: 3
+    title: "Read punctuation"
+    type: read
+    xp_reward: 20
+    content:
+      instruction: "Choose the punctuation that matches the cell."
+      items:
+        - { id: r1, label: "period", speak: "Which mark?", dots: [2, 5, 6], show_cell: true, choices: ["period", "comma", "question mark", "hyphen"], answer: "period" }
+        - { id: r2, label: "question", speak: "Which mark?", dots: [2, 3, 6], show_cell: true, choices: ["exclamation mark", "question mark", "apostrophe", "comma"], answer: "question mark" }
+        - { id: r3, label: "hyphen", speak: "Which mark?", dots: [3, 6], show_cell: true, choices: ["apostrophe", "hyphen", "comma", "period"], answer: "hyphen" }
+        - { id: r4, label: "exclaim", speak: "Which mark?", dots: [2, 3, 5], show_cell: true, choices: ["question mark", "exclamation mark", "period", "comma"], answer: "exclamation mark" }
+  - order: 4
+    title: "Unit 7 review"
+    type: review
+    xp_reward: 30
+    content:
+      instruction: "Punctuation review. Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: write, label: "comma", speak: "comma", dots: [2], show_cell: false }
+        - { id: rv2, kind: read, label: "period", speak: "Which mark?", dots: [2, 5, 6], show_cell: true, choices: ["period", "question mark", "hyphen", "comma"], answer: "period" }
+        - { id: rv3, kind: write, label: "apostrophe", speak: "apostrophe", dots: [3], show_cell: false }
+        - { id: rv4, kind: write, label: "question mark", speak: "question mark", dots: [2, 3, 6], show_cell: false }
+        - { id: rv5, kind: read, label: "exclaim", speak: "Which mark?", dots: [2, 3, 5], show_cell: true, choices: ["exclamation mark", "period", "comma", "hyphen"], answer: "exclamation mark" }

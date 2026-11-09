@@ -15,12 +15,14 @@ from app.routers import admin_debug as admin_debug_router
 from app.routers import admin_settings as admin_settings_router
 from app.routers import auth as auth_router
 from app.routers import bootstrap as bootstrap_router
+from app.routers import lessons as lessons_router
 from app.routers import me as me_router
 from app.routers import setup as setup_router
 from app.routers import statusboard as statusboard_router
 from app.routers import tracks as tracks_router
 from app.security.rate_limit import limiter
 from app.services import badges as badge_service
+from app.services import content_seed
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
@@ -38,14 +40,16 @@ def create_app() -> FastAPI:
     app.include_router(me_router.router)
     app.include_router(tracks_router.router)
     app.include_router(statusboard_router.router)
+    app.include_router(lessons_router.router)
     app.include_router(admin_settings_router.router)
     app.include_router(admin_debug_router.router)
 
     @app.on_event("startup")
-    def seed_starter_badges() -> None:
+    def seed_reference_data() -> None:
         db = SessionLocal()
         try:
             badge_service.seed_badges(db)
+            content_seed.seed_all_content(db)
         finally:
             db.close()
 

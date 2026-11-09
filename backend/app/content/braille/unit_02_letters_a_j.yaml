@@ -1,0 +1,68 @@
+order: 2
+title: Letters a–j
+description: Top-four-dot letters a through j.
+lessons:
+  - order: 1
+    title: "Learn a–e"
+    type: learn
+    xp_reward: 15
+    content:
+      instruction: "See each cell, hear the letter, then copy the chord."
+      items:
+        - { id: a, label: "a", speak: "a", letter: "a", dots: [1], show_cell: true }
+        - { id: b, label: "b", speak: "b", letter: "b", dots: [1, 2], show_cell: true }
+        - { id: c, label: "c", speak: "c", letter: "c", dots: [1, 4], show_cell: true }
+        - { id: d, label: "d", speak: "d", letter: "d", dots: [1, 4, 5], show_cell: true }
+        - { id: e, label: "e", speak: "e", letter: "e", dots: [1, 5], show_cell: true }
+  - order: 2
+    title: "Learn f–j"
+    type: learn
+    xp_reward: 15
+    content:
+      instruction: "See each cell, hear the letter, then copy the chord."
+      items:
+        - { id: f, label: "f", speak: "f", letter: "f", dots: [1, 2, 4], show_cell: true }
+        - { id: g, label: "g", speak: "g", letter: "g", dots: [1, 2, 4, 5], show_cell: true }
+        - { id: h, label: "h", speak: "h", letter: "h", dots: [1, 2, 5], show_cell: true }
+        - { id: i, label: "i", speak: "i", letter: "i", dots: [2, 4], show_cell: true }
+        - { id: j, label: "j", speak: "j", letter: "j", dots: [2, 4, 5], show_cell: true }
+  - order: 3
+    title: "Write a–j"
+    type: write
+    xp_reward: 20
+    content:
+      instruction: "Type the chord for each letter you hear."
+      items:
+        - { id: w1, label: "a", speak: "a", letter: "a", dots: [1], show_cell: false }
+        - { id: w2, label: "c", speak: "c", letter: "c", dots: [1, 4], show_cell: false }
+        - { id: w3, label: "e", speak: "e", letter: "e", dots: [1, 5], show_cell: false }
+        - { id: w4, label: "g", speak: "g", letter: "g", dots: [1, 2, 4, 5], show_cell: false }
+        - { id: w5, label: "i", speak: "i", letter: "i", dots: [2, 4], show_cell: false }
+        - { id: w6, label: "b", speak: "b", letter: "b", dots: [1, 2], show_cell: false }
+        - { id: w7, label: "j", speak: "j", letter: "j", dots: [2, 4, 5], show_cell: false }
+        - { id: w8, label: "d", speak: "d", letter: "d", dots: [1, 4, 5], show_cell: false }
+  - order: 4
+    title: "Read a–j"
+    type: read
+    xp_reward: 20
+    content:
+      instruction: "Look at the cell and choose the matching letter."
+      items:
+        - { id: r1, label: "a", speak: "Which letter is this?", letter: "a", dots: [1], show_cell: true, choices: ["a", "b", "c", "e"], answer: "a" }
+        - { id: r2, label: "f", speak: "Which letter is this?", letter: "f", dots: [1, 2, 4], show_cell: true, choices: ["d", "f", "h", "i"], answer: "f" }
+        - { id: r3, label: "j", speak: "Which letter is this?", letter: "j", dots: [2, 4, 5], show_cell: true, choices: ["i", "j", "h", "g"], answer: "j" }
+        - { id: r4, label: "c", speak: "Which letter is this?", letter: "c", dots: [1, 4], show_cell: true, choices: ["a", "c", "e", "i"], answer: "c" }
+        - { id: r5, label: "h", speak: "Which letter is this?", letter: "h", dots: [1, 2, 5], show_cell: true, choices: ["b", "f", "h", "d"], answer: "h" }
+  - order: 5
+    title: "Unit 2 review"
+    type: review
+    xp_reward: 30
+    content:
+      instruction: "Mixed a–j practice. Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: write, label: "d", speak: "d", letter: "d", dots: [1, 4, 5], show_cell: false }
+        - { id: rv2, kind: read, label: "b", speak: "Which letter?", letter: "b", dots: [1, 2], show_cell: true, choices: ["a", "b", "f", "h"], answer: "b" }
+        - { id: rv3, kind: write, label: "i", speak: "i", letter: "i", dots: [2, 4], show_cell: false }
+        - { id: rv4, kind: write, label: "g", speak: "g", letter: "g", dots: [1, 2, 4, 5], show_cell: false }
+        - { id: rv5, kind: read, label: "e", speak: "Which letter?", letter: "e", dots: [1, 5], show_cell: true, choices: ["a", "c", "e", "i"], answer: "e" }

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.messaging import Message
 from app.models.user import User
 from app.services import badges as badge_service
+from app.services import lessons as lesson_service
 from app.services import streaks as streak_service
 from app.services import tracks as track_service
 from app.services import user_settings as settings_service
@@ -60,13 +61,25 @@ def build_statusboard(db: Session, user: User) -> dict:
             }
             for b in latest_badges
         ],
-        "continue_targets": [
+        "continue_targets": _continue_targets(db, user, enrolled),
+    }
+
+
+def _continue_targets(db: Session, user: User, enrolled: list[str]) -> list[dict]:
+    targets: list[dict] = []
+    for track in enrolled:
+        if track == "braille":
+            path = lesson_service.next_braille_lesson_path(db, user) or "/app/braille"
+            hint = "Jump back into your next unlocked braille lesson."
+        else:
+            path = f"/app/{track}"
+            hint = "Cursive lessons arrive in a later phase."
+        targets.append(
             {
                 "track": track,
                 "label": "Continue Braille" if track == "braille" else "Continue Cursive",
-                "path": f"/app/{track}",
-                "hint": "Lessons unlock in a later phase — open the track home for now.",
+                "path": path,
+                "hint": hint,
             }
-            for track in enrolled
-        ],
-    }
+        )
+    return targets

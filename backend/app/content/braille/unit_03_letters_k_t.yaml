@@ -1,0 +1,65 @@
+order: 3
+title: Letters k–t
+description: Letters that add dot 3 to a–j shapes.
+lessons:
+  - order: 1
+    title: "Learn k–o"
+    type: learn
+    xp_reward: 15
+    content:
+      instruction: "These letters are a–e plus dot 3."
+      items:
+        - { id: k, label: "k", speak: "k", letter: "k", dots: [1, 3], show_cell: true }
+        - { id: l, label: "l", speak: "l", letter: "l", dots: [1, 2, 3], show_cell: true }
+        - { id: m, label: "m", speak: "m", letter: "m", dots: [1, 3, 4], show_cell: true }
+        - { id: n, label: "n", speak: "n", letter: "n", dots: [1, 3, 4, 5], show_cell: true }
+        - { id: o, label: "o", speak: "o", letter: "o", dots: [1, 3, 5], show_cell: true }
+  - order: 2
+    title: "Learn p–t"
+    type: learn
+    xp_reward: 15
+    content:
+      instruction: "These letters are f–j plus dot 3."
+      items:
+        - { id: p, label: "p", speak: "p", letter: "p", dots: [1, 2, 3, 4], show_cell: true }
+        - { id: q, label: "q", speak: "q", letter: "q", dots: [1, 2, 3, 4, 5], show_cell: true }
+        - { id: r, label: "r", speak: "r", letter: "r", dots: [1, 2, 3, 5], show_cell: true }
+        - { id: s, label: "s", speak: "s", letter: "s", dots: [2, 3, 4], show_cell: true }
+        - { id: t, label: "t", speak: "t", letter: "t", dots: [2, 3, 4, 5], show_cell: true }
+  - order: 3
+    title: "Write k–t"
+    type: write
+    xp_reward: 20
+    content:
+      instruction: "Type each letter you hear."
+      items:
+        - { id: w1, label: "k", speak: "k", letter: "k", dots: [1, 3], show_cell: false }
+        - { id: w2, label: "m", speak: "m", letter: "m", dots: [1, 3, 4], show_cell: false }
+        - { id: w3, label: "p", speak: "p", letter: "p", dots: [1, 2, 3, 4], show_cell: false }
+        - { id: w4, label: "s", speak: "s", letter: "s", dots: [2, 3, 4], show_cell: false }
+        - { id: w5, label: "t", speak: "t", letter: "t", dots: [2, 3, 4, 5], show_cell: false }
+        - { id: w6, label: "l", speak: "l", letter: "l", dots: [1, 2, 3], show_cell: false }
+  - order: 4
+    title: "Read k–t"
+    type: read
+    xp_reward: 20
+    content:
+      instruction: "Choose the letter that matches the cell."
+      items:
+        - { id: r1, label: "n", speak: "Which letter?", letter: "n", dots: [1, 3, 4, 5], show_cell: true, choices: ["m", "n", "o", "r"], answer: "n" }
+        - { id: r2, label: "q", speak: "Which letter?", letter: "q", dots: [1, 2, 3, 4, 5], show_cell: true, choices: ["p", "q", "g", "t"], answer: "q" }
+        - { id: r3, label: "r", speak: "Which letter?", letter: "r", dots: [1, 2, 3, 5], show_cell: true, choices: ["h", "r", "s", "l"], answer: "r" }
+        - { id: r4, label: "o", speak: "Which letter?", letter: "o", dots: [1, 3, 5], show_cell: true, choices: ["e", "k", "o", "u"], answer: "o" }
+  - order: 5
+    title: "Unit 3 review"
+    type: review
+    xp_reward: 30
+    content:
+      instruction: "Mixed k–t practice. Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: write, label: "l", speak: "l", letter: "l", dots: [1, 2, 3], show_cell: false }
+        - { id: rv2, kind: read, label: "s", speak: "Which letter?", letter: "s", dots: [2, 3, 4], show_cell: true, choices: ["i", "s", "t", "p"], answer: "s" }
+        - { id: rv3, kind: write, label: "t", speak: "t", letter: "t", dots: [2, 3, 4, 5], show_cell: false }
+        - { id: rv4, kind: write, label: "m", speak: "m", letter: "m", dots: [1, 3, 4], show_cell: false }
+        - { id: rv5, kind: read, label: "k", speak: "Which letter?", letter: "k", dots: [1, 3], show_cell: true, choices: ["a", "k", "u", "l"], answer: "k" }

@@ -1,0 +1,54 @@
+order: 4
+title: Letters u–z
+description: Letters with dots 3 and 6; w is the exception.
+lessons:
+  - order: 1
+    title: "Learn u–z"
+    type: learn
+    xp_reward: 20
+    content:
+      instruction: "u–z add dots 3 and 6 to a–e shapes. Letter w is special."
+      items:
+        - { id: u, label: "u", speak: "u", letter: "u", dots: [1, 3, 6], show_cell: true }
+        - { id: v, label: "v", speak: "v", letter: "v", dots: [1, 2, 3, 6], show_cell: true }
+        - { id: x, label: "x", speak: "x", letter: "x", dots: [1, 3, 4, 6], show_cell: true }
+        - { id: y, label: "y", speak: "y", letter: "y", dots: [1, 3, 4, 5, 6], show_cell: true }
+        - { id: z, label: "z", speak: "z", letter: "z", dots: [1, 3, 5, 6], show_cell: true }
+        - { id: w, label: "w", speak: "w, the exception", letter: "w", dots: [2, 4, 5, 6], show_cell: true }
+  - order: 2
+    title: "Write u–z"
+    type: write
+    xp_reward: 20
+    content:
+      instruction: "Type each letter, including w."
+      items:
+        - { id: w1, label: "u", speak: "u", letter: "u", dots: [1, 3, 6], show_cell: false }
+        - { id: w2, label: "w", speak: "w", letter: "w", dots: [2, 4, 5, 6], show_cell: false }
+        - { id: w3, label: "y", speak: "y", letter: "y", dots: [1, 3, 4, 5, 6], show_cell: false }
+        - { id: w4, label: "v", speak: "v", letter: "v", dots: [1, 2, 3, 6], show_cell: false }
+        - { id: w5, label: "z", speak: "z", letter: "z", dots: [1, 3, 5, 6], show_cell: false }
+        - { id: w6, label: "x", speak: "x", letter: "x", dots: [1, 3, 4, 6], show_cell: false }
+  - order: 3
+    title: "Read u–z"
+    type: read
+    xp_reward: 20
+    content:
+      instruction: "Choose the matching letter."
+      items:
+        - { id: r1, label: "w", speak: "Which letter?", letter: "w", dots: [2, 4, 5, 6], show_cell: true, choices: ["j", "w", "y", "v"], answer: "w" }
+        - { id: r2, label: "u", speak: "Which letter?", letter: "u", dots: [1, 3, 6], show_cell: true, choices: ["k", "o", "u", "x"], answer: "u" }
+        - { id: r3, label: "y", speak: "Which letter?", letter: "y", dots: [1, 3, 4, 5, 6], show_cell: true, choices: ["n", "q", "y", "z"], answer: "y" }
+        - { id: r4, label: "z", speak: "Which letter?", letter: "z", dots: [1, 3, 5, 6], show_cell: true, choices: ["o", "z", "x", "u"], answer: "z" }
+  - order: 4
+    title: "Unit 4 review"
+    type: review
+    xp_reward: 30
+    content:
+      instruction: "Finish the alphabet. Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: write, label: "w", speak: "w", letter: "w", dots: [2, 4, 5, 6], show_cell: false }
+        - { id: rv2, kind: read, label: "v", speak: "Which letter?", letter: "v", dots: [1, 2, 3, 6], show_cell: true, choices: ["l", "v", "u", "x"], answer: "v" }
+        - { id: rv3, kind: write, label: "x", speak: "x", letter: "x", dots: [1, 3, 4, 6], show_cell: false }
+        - { id: rv4, kind: write, label: "y", speak: "y", letter: "y", dots: [1, 3, 4, 5, 6], show_cell: false }
+        - { id: rv5, kind: read, label: "z", speak: "Which letter?", letter: "z", dots: [1, 3, 5, 6], show_cell: true, choices: ["z", "o", "w", "u"], answer: "z" }

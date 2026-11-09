@@ -1,0 +1,56 @@
+order: 8
+title: Words & short sentences
+description: Grade 1 (uncontracted) spelling of short words.
+lessons:
+  - order: 1
+    title: "Learn short words"
+    type: learn
+    xp_reward: 20
+    content:
+      instruction: "Copy each letter of the word in order."
+      items:
+        - { id: c, label: "c in cat", speak: "c", letter: "c", dots: [1, 4], show_cell: true }
+        - { id: a, label: "a in cat", speak: "a", letter: "a", dots: [1], show_cell: true }
+        - { id: t, label: "t in cat", speak: "t", letter: "t", dots: [2, 3, 4, 5], show_cell: true }
+        - { id: d, label: "d in dog", speak: "d", letter: "d", dots: [1, 4, 5], show_cell: true }
+        - { id: o, label: "o in dog", speak: "o", letter: "o", dots: [1, 3, 5], show_cell: true }
+        - { id: g, label: "g in dog", speak: "g", letter: "g", dots: [1, 2, 4, 5], show_cell: true }
+  - order: 2
+    title: "Write words"
+    type: write
+    xp_reward: 25
+    content:
+      instruction: "Spell short words one letter at a time."
+      items:
+        - { id: w1, label: "h", speak: "h in hi", letter: "h", dots: [1, 2, 5], show_cell: false }
+        - { id: w2, label: "i", speak: "i in hi", letter: "i", dots: [2, 4], show_cell: false }
+        - { id: w3, label: "y", speak: "y in yes", letter: "y", dots: [1, 3, 4, 5, 6], show_cell: false }
+        - { id: w4, label: "e", speak: "e in yes", letter: "e", dots: [1, 5], show_cell: false }
+        - { id: w5, label: "s", speak: "s in yes", letter: "s", dots: [2, 3, 4], show_cell: false }
+        - { id: w6, label: "g", speak: "g in go", letter: "g", dots: [1, 2, 4, 5], show_cell: false }
+        - { id: w7, label: "o", speak: "o in go", letter: "o", dots: [1, 3, 5], show_cell: false }
+  - order: 3
+    title: "Read words"
+    type: read
+    xp_reward: 25
+    content:
+      instruction: "Identify letters used in short words."
+      items:
+        - { id: r1, label: "c", speak: "First letter of cat?", letter: "c", dots: [1, 4], show_cell: true, choices: ["a", "c", "t", "k"], answer: "c" }
+        - { id: r2, label: "t", speak: "Last letter of cat?", letter: "t", dots: [2, 3, 4, 5], show_cell: true, choices: ["a", "s", "t", "d"], answer: "t" }
+        - { id: r3, label: "d", speak: "First letter of dog?", letter: "d", dots: [1, 4, 5], show_cell: true, choices: ["b", "d", "g", "o"], answer: "d" }
+        - { id: r4, label: "period", speak: "End of a sentence uses which mark?", dots: [2, 5, 6], show_cell: true, choices: ["comma", "period", "question mark", "hyphen"], answer: "period" }
+  - order: 4
+    title: "Unit 8 review"
+    type: review
+    xp_reward: 40
+    content:
+      instruction: "Words and punctuation mixed. Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: write, label: "c", speak: "c", letter: "c", dots: [1, 4], show_cell: false }
+        - { id: rv2, kind: write, label: "a", speak: "a", letter: "a", dots: [1], show_cell: false }
+        - { id: rv3, kind: write, label: "t", speak: "t", letter: "t", dots: [2, 3, 4, 5], show_cell: false }
+        - { id: rv4, kind: read, label: "period", speak: "Which mark ends a sentence?", dots: [2, 5, 6], show_cell: true, choices: ["period", "comma", "hyphen", "apostrophe"], answer: "period" }
+        - { id: rv5, kind: write, label: "g", speak: "g", letter: "g", dots: [1, 2, 4, 5], show_cell: false }
+        - { id: rv6, kind: write, label: "o", speak: "o", letter: "o", dots: [1, 3, 5], show_cell: false }

@@ -5,6 +5,8 @@ import { RequireAuth } from "@/app/RequireAuth";
 import { AdminDashboardPage } from "@/pages/AdminDashboardPage";
 import { AdminEmailSettingsPage } from "@/pages/AdminEmailSettingsPage";
 import { AdminXpDebugPage } from "@/pages/AdminXpDebugPage";
+import { BrailleLessonPage } from "@/pages/BrailleLessonPage";
+import { BrailleTrackPage } from "@/pages/BrailleTrackPage";
 import { CheckEmailPage } from "@/pages/CheckEmailPage";
 import { EntryGatePage } from "@/pages/EntryGatePage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
@@ -36,10 +38,8 @@ export function App() {
             <Route path="/tracks" element={<TracksPage />} />
             <Route element={<AppFrame mode="learner" />}>
               <Route path="/app" element={<StatusboardPage />} />
-              <Route
-                path="/app/braille"
-                element={<StubPage title="Braille" copy="Braille lessons arrive in Phase 7." />}
-              />
+              <Route path="/app/braille" element={<BrailleTrackPage />} />
+              <Route path="/app/braille/lessons/:lessonId" element={<BrailleLessonPage />} />
               <Route
                 path="/app/cursive"
                 element={<StubPage title="Cursive" copy="Cursive lessons arrive in Phase 8." />}

@@ -1,0 +1,52 @@
+order: 6
+title: Numbers
+description: Numeric indicator (dots 3-4-5-6) plus a–j shapes for 1–0.
+lessons:
+  - order: 1
+    title: "Meet the number sign"
+    type: learn
+    xp_reward: 15
+    content:
+      instruction: "Numbers start with the number indicator (dots 3, 4, 5, 6). Digits 1–0 reuse a–j."
+      items:
+        - { id: num, label: "Number sign", speak: "Number indicator", dots: [3, 4, 5, 6], show_cell: true }
+        - { id: n1, label: "1", speak: "Digit 1 uses the a shape", letter: "1", dots: [1], show_cell: true }
+        - { id: n5, label: "5", speak: "Digit 5 uses the e shape", letter: "5", dots: [1, 5], show_cell: true }
+        - { id: n0, label: "0", speak: "Digit 0 uses the j shape", letter: "0", dots: [2, 4, 5], show_cell: true }
+  - order: 2
+    title: "Write digits"
+    type: write
+    xp_reward: 20
+    content:
+      instruction: "Type the number indicator or the digit chord when asked."
+      items:
+        - { id: w1, label: "Number sign", speak: "Number indicator", dots: [3, 4, 5, 6], show_cell: false }
+        - { id: w2, label: "1", speak: "digit 1", letter: "1", dots: [1], show_cell: false }
+        - { id: w3, label: "2", speak: "digit 2", letter: "2", dots: [1, 2], show_cell: false }
+        - { id: w4, label: "Number sign", speak: "Number indicator", dots: [3, 4, 5, 6], show_cell: false }
+        - { id: w5, label: "9", speak: "digit 9", letter: "9", dots: [2, 4], show_cell: false }
+        - { id: w6, label: "0", speak: "digit 0", letter: "0", dots: [2, 4, 5], show_cell: false }
+  - order: 3
+    title: "Read digits"
+    type: read
+    xp_reward: 20
+    content:
+      instruction: "Identify the number indicator or digit."
+      items:
+        - { id: r1, label: "Number", speak: "What is this cell?", dots: [3, 4, 5, 6], show_cell: true, choices: ["Number sign", "Capital sign", "g", "q"], answer: "Number sign" }
+        - { id: r2, label: "3", speak: "Which digit shape?", letter: "3", dots: [1, 4], show_cell: true, choices: ["1", "3", "4", "9"], answer: "3" }
+        - { id: r3, label: "7", speak: "Which digit shape?", letter: "7", dots: [1, 2, 4, 5], show_cell: true, choices: ["6", "7", "8", "0"], answer: "7" }
+        - { id: r4, label: "0", speak: "Which digit shape?", letter: "0", dots: [2, 4, 5], show_cell: true, choices: ["8", "9", "0", "2"], answer: "0" }
+  - order: 4
+    title: "Unit 6 review"
+    type: review
+    xp_reward: 30
+    content:
+      instruction: "Number practice. Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: write, label: "Number sign", speak: "Number indicator", dots: [3, 4, 5, 6], show_cell: false }
+        - { id: rv2, kind: write, label: "4", speak: "digit 4", letter: "4", dots: [1, 4, 5], show_cell: false }
+        - { id: rv3, kind: read, label: "Number", speak: "What is this?", dots: [3, 4, 5, 6], show_cell: true, choices: ["Number sign", "Period", "w", "t"], answer: "Number sign" }
+        - { id: rv4, kind: write, label: "8", speak: "digit 8", letter: "8", dots: [1, 2, 5], show_cell: false }
+        - { id: rv5, kind: read, label: "6", speak: "Which digit?", letter: "6", dots: [1, 2, 4], show_cell: true, choices: ["5", "6", "f", "8"], answer: "6" }
