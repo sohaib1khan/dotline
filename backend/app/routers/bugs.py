@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models.user import User
-from app.schemas.bugs import BugCreateRequest, BugPublic, BugReplyRequest
+from app.schemas.bugs import BugCreateRequest, BugPublic, BugReplyRequest, BugStatusUpdateRequest
 from app.security.deps import get_current_user, require_admin, require_csrf
 from app.security.rate_limit import limiter
 from app.services import bugs as bugs_service
@@ -55,12 +56,18 @@ def my_bugs(
 
 @router.get("/api/admin/bugs", response_model=list[BugPublic])
 def admin_list_bugs(
+    status_filter: str | None = Query(default=None, alias="status"),
+    category: str | None = Query(default=None),
+    days: int | None = Query(default=None, ge=1, le=365),
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
 ) -> list[BugPublic]:
+    since = datetime.now(UTC) - timedelta(days=days) if days else None
     return [
         BugPublic(**bugs_service.report_public(row, include_context=True))
-        for row in bugs_service.list_all_reports(db)
+        for row in bugs_service.list_all_reports(
+            db, status_filter=status_filter, category=category, since=since
+        )
     ]
 
 
@@ -91,5 +98,25 @@ def admin_reply(
         report_id=report_id,
         reply=payload.reply,
         status_value=payload.status,
+    )
+    return BugPublic(**bugs_service.report_public(row, include_context=True))
+
+
+@router.post(
+    "/api/admin/bugs/{report_id}/status",
+    response_model=BugPublic,
+    dependencies=[Depends(require_csrf)],
+)
+def admin_status(
+    report_id: uuid.UUID,
+    payload: BugStatusUpdateRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> BugPublic:
+    row = bugs_service.update_status(
+        db,
+        report_id,
+        status_value=payload.status,
+        admin_note=payload.admin_note,
     )
     return BugPublic(**bugs_service.report_public(row, include_context=True))

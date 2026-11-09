@@ -94,11 +94,43 @@ def list_user_reports(db: Session, user_id: uuid.UUID) -> list[BugReport]:
     )
 
 
-def list_all_reports(db: Session, *, status_filter: str | None = None) -> list[BugReport]:
+def list_all_reports(
+    db: Session,
+    *,
+    status_filter: str | None = None,
+    category: str | None = None,
+    since: datetime | None = None,
+) -> list[BugReport]:
     stmt = select(BugReport).order_by(BugReport.created_at.desc()).limit(100)
     if status_filter:
         stmt = stmt.where(BugReport.status == status_filter)
+    if category:
+        stmt = stmt.where(BugReport.category == category)
+    if since is not None:
+        stmt = stmt.where(BugReport.created_at >= since)
     return list(db.scalars(stmt).all())
+
+
+def update_status(
+    db: Session,
+    report_id: uuid.UUID,
+    *,
+    status_value: str,
+    admin_note: str | None = None,
+) -> BugReport:
+    row = get_report(db, report_id)
+    if status_value not in {"open", "in_progress", "fixed", "wont_fix"}:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"status": "Invalid status."},
+        )
+    row.status = status_value
+    if admin_note is not None:
+        row.admin_note = admin_note.strip()[:4000] or None
+    row.updated_at = datetime.now(UTC)
+    db.commit()
+    db.refresh(row)
+    return row
 
 
 def get_report(db: Session, report_id: uuid.UUID) -> BugReport:

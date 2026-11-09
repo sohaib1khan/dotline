@@ -1,23 +1,30 @@
+import { Link } from "react-router-dom";
+
+const LINKS = [
+  { to: "/admin/users", title: "Users", copy: "Search, disable, reset, and delete accounts." },
+  { to: "/admin/content", title: "Content", copy: "Edit units and lessons for both tracks." },
+  { to: "/admin/bugs", title: "Bug reports", copy: "Triage reports and reply to inboxes." },
+  { to: "/admin/announcements", title: "Announcements", copy: "Broadcast to every learner." },
+  { to: "/admin/settings", title: "Settings", copy: "General, sign-ups, and email." },
+];
+
 export function AdminDashboardPage() {
   return (
     <section aria-labelledby="admin-dash-title">
       <h1 id="admin-dash-title" className="page-title">
         Admin dashboard
       </h1>
-      <p className="page-copy">Monitoring widgets arrive in Phase 13. Email settings are ready now.</p>
+      <p className="lede">Monitoring widgets arrive in Phase 13. Use the tools below now.</p>
       <div className="stub-grid">
-        <article className="stub-card">
-          <h2>Users</h2>
-          <p>Manage learners later.</p>
-        </article>
-        <article className="stub-card">
-          <h2>Content</h2>
-          <p>CMS arrives in Phase 12.</p>
-        </article>
-        <article className="stub-card">
-          <h2>Email</h2>
-          <p>Use Settings in the nav to configure Resend.</p>
-        </article>
+        {LINKS.map((item) => (
+          <article key={item.to} className="stub-card">
+            <h2>{item.title}</h2>
+            <p>{item.copy}</p>
+            <Link className="secondary-button link-button" to={item.to}>
+              Open
+            </Link>
+          </article>
+        ))}
       </div>
     </section>
   );

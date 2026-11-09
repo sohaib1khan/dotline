@@ -69,3 +69,18 @@ def revoke_session_token(db: Session, token: str | None) -> None:
         return
     record.revoked_at = datetime.now(UTC)
     db.commit()
+
+
+def revoke_user_sessions(db: Session, user_id: uuid.UUID, *, commit: bool = True) -> int:
+    now = datetime.now(UTC)
+    rows = db.scalars(
+        select(SessionRecord).where(
+            SessionRecord.user_id == user_id,
+            SessionRecord.revoked_at.is_(None),
+        )
+    ).all()
+    for record in rows:
+        record.revoked_at = now
+    if commit:
+        db.commit()
+    return len(rows)

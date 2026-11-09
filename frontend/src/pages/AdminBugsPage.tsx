@@ -15,25 +15,43 @@ type BugPublic = {
 };
 
 const STATUSES = ["open", "in_progress", "fixed", "wont_fix"] as const;
+const CATEGORIES = [
+  "sound_not_working",
+  "vibration_not_working",
+  "controller_problem",
+  "hard_to_see_read",
+  "lesson_stuck_or_wrong",
+  "tracing_not_scoring",
+  "login_or_account",
+  "layout_broken",
+  "other",
+] as const;
 
 export function AdminBugsPage() {
   const [rows, setRows] = useState<BugPublic[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
   const [status, setStatus] = useState<(typeof STATUSES)[number] | "">("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterDays, setFilterDays] = useState("all");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const data = await apiGet<BugPublic[]>("/api/admin/bugs");
+      const params = new URLSearchParams();
+      if (filterStatus !== "all") params.set("status", filterStatus);
+      if (filterCategory !== "all") params.set("category", filterCategory);
+      if (filterDays !== "all") params.set("days", filterDays);
+      const data = await apiGet<BugPublic[]>(`/api/admin/bugs?${params.toString()}`);
       setRows(data);
       setError("");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not load bug reports.");
     }
-  }, []);
+  }, [filterStatus, filterCategory, filterDays]);
 
   useEffect(() => {
     void load();
@@ -62,12 +80,31 @@ export function AdminBugsPage() {
     }
   }
 
+  async function saveStatusOnly() {
+    if (!selected || !status) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const updated = await apiPost<BugPublic>(`/api/admin/bugs/${selected.id}/status`, {
+        status,
+        admin_note: selected.admin_note,
+      });
+      setRows((prev) => prev.map((row) => (row.id === updated.id ? updated : row)));
+      setMessage("Status updated.");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Status update failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section aria-labelledby="admin-bugs-title">
       <h1 id="admin-bugs-title" className="page-title">
         Bug Reports
       </h1>
-      <p className="lede">Reply here to deliver a message to the learner inbox.</p>
+      <p className="lede">Filter the queue, inspect context, change status, or reply to the learner inbox.</p>
 
       {error ? (
         <p className="field-error" role="alert">
@@ -79,6 +116,61 @@ export function AdminBugsPage() {
           <strong>{message}</strong>
         </div>
       ) : null}
+
+      <div className="admin-filters">
+        <div className="field">
+          <label className="field-label" htmlFor="bug-filter-status">
+            Status
+          </label>
+          <select
+            id="bug-filter-status"
+            className="field-input field-select"
+            value={filterStatus}
+            onChange={(event) => setFilterStatus(event.target.value)}
+          >
+            <option value="all">All</option>
+            {STATUSES.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label className="field-label" htmlFor="bug-filter-category">
+            Category
+          </label>
+          <select
+            id="bug-filter-category"
+            className="field-input field-select"
+            value={filterCategory}
+            onChange={(event) => setFilterCategory(event.target.value)}
+          >
+            <option value="all">All</option>
+            {CATEGORIES.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label className="field-label" htmlFor="bug-filter-days">
+            Date
+          </label>
+          <select
+            id="bug-filter-days"
+            className="field-input field-select"
+            value={filterDays}
+            onChange={(event) => setFilterDays(event.target.value)}
+          >
+            <option value="all">Any time</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </div>
+      </div>
 
       <div className="inbox-layout">
         <ul className="inbox-list" aria-label="Bug report queue">
@@ -104,7 +196,7 @@ export function AdminBugsPage() {
           ))}
           {rows.length === 0 ? (
             <li>
-              <p className="lede">No bug reports yet.</p>
+              <p className="lede">No bug reports match these filters.</p>
             </li>
           ) : null}
         </ul>
@@ -145,6 +237,15 @@ export function AdminBugsPage() {
                   ))}
                 </select>
               </div>
+
+              <button
+                type="button"
+                className="secondary-button"
+                disabled={busy || !status}
+                onClick={() => void saveStatusOnly()}
+              >
+                Update status only
+              </button>
 
               <div className="field">
                 <label className="field-label" htmlFor="bug-reply">

@@ -11,8 +11,11 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app.db import SessionLocal
 from app.middleware.setup_gate import SetupGateMiddleware
+from app.routers import admin_announcements as admin_announcements_router
+from app.routers import admin_content as admin_content_router
 from app.routers import admin_debug as admin_debug_router
 from app.routers import admin_settings as admin_settings_router
+from app.routers import admin_users as admin_users_router
 from app.routers import auth as auth_router
 from app.routers import bootstrap as bootstrap_router
 from app.routers import bugs as bugs_router
@@ -52,6 +55,9 @@ def create_app() -> FastAPI:
     app.include_router(inbox_router.router)
     app.include_router(bugs_router.router)
     app.include_router(admin_settings_router.router)
+    app.include_router(admin_users_router.router)
+    app.include_router(admin_content_router.router)
+    app.include_router(admin_announcements_router.router)
     app.include_router(admin_debug_router.router)
 
     @app.on_event("startup")

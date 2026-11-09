@@ -3,9 +3,13 @@ import { AppFrame } from "@/app/AppFrame";
 import { Bootstrap } from "@/app/Bootstrap";
 import { RequireAuth } from "@/app/RequireAuth";
 import { TelemetryBridge } from "@/components/TelemetryBridge";
+import { AdminAnnouncementsPage } from "@/pages/AdminAnnouncementsPage";
 import { AdminBugsPage } from "@/pages/AdminBugsPage";
+import { AdminContentPage } from "@/pages/AdminContentPage";
 import { AdminDashboardPage } from "@/pages/AdminDashboardPage";
 import { AdminEmailSettingsPage } from "@/pages/AdminEmailSettingsPage";
+import { AdminSettingsHubPage } from "@/pages/AdminSettingsHubPage";
+import { AdminUsersPage } from "@/pages/AdminUsersPage";
 import { AdminXpDebugPage } from "@/pages/AdminXpDebugPage";
 import { BrailleLessonPage } from "@/pages/BrailleLessonPage";
 import { BrailleTrackPage } from "@/pages/BrailleTrackPage";
@@ -70,19 +74,11 @@ export function App() {
                 path="/admin/monitoring"
                 element={<StubPage title="Monitoring" copy="Monitoring arrives in Phase 13." />}
               />
-              <Route
-                path="/admin/users"
-                element={<StubPage title="Users" copy="User admin arrives in Phase 12." />}
-              />
-              <Route
-                path="/admin/content"
-                element={<StubPage title="Content" copy="Content CMS arrives in Phase 12." />}
-              />
+              <Route path="/admin/users" element={<AdminUsersPage />} />
+              <Route path="/admin/content" element={<AdminContentPage />} />
               <Route path="/admin/bugs" element={<AdminBugsPage />} />
-              <Route
-                path="/admin/announcements"
-                element={<StubPage title="Announcements" copy="Announcements arrive in Phase 12." />}
-              />
+              <Route path="/admin/announcements" element={<AdminAnnouncementsPage />} />
+              <Route path="/admin/settings" element={<AdminSettingsHubPage />} />
               <Route path="/admin/settings/email" element={<AdminEmailSettingsPage />} />
               <Route path="/admin/debug/input" element={<InputDebugPage />} />
               <Route path="/admin/debug/xp" element={<AdminXpDebugPage />} />

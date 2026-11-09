@@ -10,6 +10,10 @@ from app.models.user import User
 from app.schemas.admin_settings import (
     EmailSettingsResponse,
     EmailSettingsUpdateRequest,
+    GeneralSettingsResponse,
+    GeneralSettingsUpdateRequest,
+    SignupsSettingsResponse,
+    SignupsSettingsUpdateRequest,
     TestEmailResponse,
 )
 from app.security.deps import require_admin, require_csrf
@@ -90,3 +94,47 @@ def send_test_email(
     except EmailError as exc:
         return TestEmailResponse(ok=False, message=exc.message)
     return TestEmailResponse(ok=True, message=f"Test email sent to {admin.email}.")
+
+
+@router.get("/signups", response_model=SignupsSettingsResponse)
+def get_signups(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> SignupsSettingsResponse:
+    return SignupsSettingsResponse(signups_open=settings_service.signups_open(db))
+
+
+@router.put("/signups", response_model=SignupsSettingsResponse, dependencies=[Depends(require_csrf)])
+def update_signups(
+    payload: SignupsSettingsUpdateRequest,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+) -> SignupsSettingsResponse:
+    open_ = settings_service.set_signups_open(
+        db, open_=payload.signups_open, updated_by=admin.id
+    )
+    return SignupsSettingsResponse(signups_open=open_)
+
+
+@router.get("/general", response_model=GeneralSettingsResponse)
+def get_general(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> GeneralSettingsResponse:
+    return GeneralSettingsResponse(**settings_service.general_settings_public(db))
+
+
+@router.put("/general", response_model=GeneralSettingsResponse, dependencies=[Depends(require_csrf)])
+def update_general(
+    payload: GeneralSettingsUpdateRequest,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+) -> GeneralSettingsResponse:
+    return GeneralSettingsResponse(
+        **settings_service.update_general_settings(
+            db,
+            app_name=payload.app_name,
+            default_daily_goal_minutes=payload.default_daily_goal_minutes,
+            updated_by=admin.id,
+        )
+    )

@@ -15,6 +15,8 @@ KEY_RESEND_API = "email.resend_api_key"
 KEY_FROM_NAME = "email.from_name"
 KEY_FROM_EMAIL = "email.from_email"
 KEY_SIGNUPS_OPEN = "signups.open"
+KEY_APP_NAME = "general.app_name"
+KEY_DEFAULT_DAILY_GOAL = "general.default_daily_goal_minutes"
 
 
 def get_setting(db: Session, key: str) -> str | None:
@@ -91,3 +93,48 @@ def email_settings_public(db: Session) -> dict:
 def list_settings_keys(db: Session) -> list[str]:
     rows = db.scalars(select(AppSetting.key)).all()
     return list(rows)
+
+
+def set_signups_open(db: Session, *, open_: bool, updated_by: uuid.UUID | None) -> bool:
+    set_setting(db, KEY_SIGNUPS_OPEN, "true" if open_ else "false", updated_by=updated_by)
+    return open_
+
+
+def general_settings_public(db: Session) -> dict:
+    raw_goal = get_setting(db, KEY_DEFAULT_DAILY_GOAL)
+    try:
+        goal = int(raw_goal) if raw_goal else 10
+    except ValueError:
+        goal = 10
+    if goal not in {5, 10, 20}:
+        goal = 10
+    return {
+        "app_name": get_setting(db, KEY_APP_NAME) or "Dotline",
+        "default_daily_goal_minutes": goal,
+        "signups_open": signups_open(db),
+    }
+
+
+def update_general_settings(
+    db: Session,
+    *,
+    app_name: str,
+    default_daily_goal_minutes: int,
+    updated_by: uuid.UUID | None,
+) -> dict:
+    name = app_name.strip()[:80] or "Dotline"
+    if default_daily_goal_minutes not in {5, 10, 20}:
+        from fastapi import HTTPException, status
+
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"default_daily_goal_minutes": "Choose 5, 10, or 20."},
+        )
+    set_setting(db, KEY_APP_NAME, name, updated_by=updated_by)
+    set_setting(
+        db,
+        KEY_DEFAULT_DAILY_GOAL,
+        str(default_daily_goal_minutes),
+        updated_by=updated_by,
+    )
+    return general_settings_public(db)

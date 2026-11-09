@@ -41,3 +41,8 @@ class BugPublic(BaseModel):
 class BugReplyRequest(BaseModel):
     reply: str = Field(min_length=2, max_length=4000)
     status: Literal["open", "in_progress", "fixed", "wont_fix"] | None = None
+
+
+class BugStatusUpdateRequest(BaseModel):
+    status: Literal["open", "in_progress", "fixed", "wont_fix"]
+    admin_note: str | None = Field(default=None, max_length=4000)

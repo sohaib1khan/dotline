@@ -23,7 +23,7 @@ const ADMIN_ITEMS: NavItem[] = [
   { to: "/admin/content", label: "Content" },
   { to: "/admin/bugs", label: "Bugs" },
   { to: "/admin/announcements", label: "Announce" },
-  { to: "/admin/settings/email", label: "Settings" },
+  { to: "/admin/settings", label: "Settings" },
   { to: "/admin/debug/input", label: "Input debug" },
   { to: "/admin/debug/xp", label: "XP debug" },
 ];

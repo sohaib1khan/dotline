@@ -1,5 +1,7 @@
 """Admin settings schemas."""
 
+from typing import Literal
+
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -22,3 +24,22 @@ class EmailSettingsUpdateRequest(BaseModel):
 class TestEmailResponse(BaseModel):
     ok: bool
     message: str
+
+
+class SignupsSettingsResponse(BaseModel):
+    signups_open: bool
+
+
+class SignupsSettingsUpdateRequest(BaseModel):
+    signups_open: bool
+
+
+class GeneralSettingsResponse(BaseModel):
+    app_name: str
+    default_daily_goal_minutes: Literal[5, 10, 20]
+    signups_open: bool
+
+
+class GeneralSettingsUpdateRequest(BaseModel):
+    app_name: str = Field(min_length=1, max_length=80)
+    default_daily_goal_minutes: Literal[5, 10, 20]
