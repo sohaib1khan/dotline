@@ -71,6 +71,7 @@ class UserSetting(Base):
     haptics_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     haptics_intensity: Mapped[float] = mapped_column(Float, nullable=False, default=0.7)
     handedness: Mapped[str] = mapped_column(String(16), nullable=False, default=Handedness.RIGHT.value)
+    daily_goal_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
     gamepad_mapping: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="settings")

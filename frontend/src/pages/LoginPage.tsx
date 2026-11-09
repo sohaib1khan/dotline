@@ -41,7 +41,12 @@ export function LoginPage() {
         navigate("/admin/settings/email");
         return;
       }
-      navigate("/app");
+      try {
+        const tracks = await apiGet<{ tracks: string[] }>("/api/me/tracks");
+        navigate(tracks.tracks.length === 0 ? "/tracks" : "/app");
+      } catch {
+        navigate("/tracks");
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Login failed.");
     } finally {

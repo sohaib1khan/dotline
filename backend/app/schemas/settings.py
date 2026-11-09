@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 ThemeName = Literal["high_contrast_dark", "high_contrast_light", "yellow_on_black"]
 Handedness = Literal["left", "right"]
+DailyGoalMinutes = Literal[5, 10, 20]
 
 
 class UserSettingsPublic(BaseModel):
@@ -21,6 +22,7 @@ class UserSettingsPublic(BaseModel):
     haptics_enabled: bool
     haptics_intensity: float
     handedness: Handedness
+    daily_goal_minutes: int = 10
     gamepad_mapping: dict[str, Any] | None = None
 
     model_config = {"from_attributes": True}
@@ -37,6 +39,7 @@ class UserSettingsUpdate(BaseModel):
     haptics_enabled: bool | None = None
     haptics_intensity: float | None = Field(default=None, ge=0, le=1)
     handedness: Handedness | None = None
+    daily_goal_minutes: DailyGoalMinutes | None = None
     gamepad_mapping: dict[str, Any] | None = None
 
 

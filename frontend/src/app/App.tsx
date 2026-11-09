@@ -4,6 +4,7 @@ import { Bootstrap } from "@/app/Bootstrap";
 import { RequireAuth } from "@/app/RequireAuth";
 import { AdminDashboardPage } from "@/pages/AdminDashboardPage";
 import { AdminEmailSettingsPage } from "@/pages/AdminEmailSettingsPage";
+import { AdminXpDebugPage } from "@/pages/AdminXpDebugPage";
 import { CheckEmailPage } from "@/pages/CheckEmailPage";
 import { EntryGatePage } from "@/pages/EntryGatePage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
@@ -31,9 +32,8 @@ export function App() {
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/tracks" element={<TracksPage />} />
-
           <Route element={<RequireAuth />}>
+            <Route path="/tracks" element={<TracksPage />} />
             <Route element={<AppFrame mode="learner" />}>
               <Route path="/app" element={<StatusboardPage />} />
               <Route
@@ -89,6 +89,7 @@ export function App() {
               />
               <Route path="/admin/settings/email" element={<AdminEmailSettingsPage />} />
               <Route path="/admin/debug/input" element={<InputDebugPage />} />
+              <Route path="/admin/debug/xp" element={<AdminXpDebugPage />} />
             </Route>
           </Route>
 

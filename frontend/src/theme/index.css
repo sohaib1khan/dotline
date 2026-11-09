@@ -561,3 +561,163 @@ kbd {
   font-size: 0.9em;
   word-break: break-word;
 }
+
+.track-picker {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.track-card {
+  display: grid;
+  gap: 0.4rem;
+  min-height: 6rem;
+  text-align: left;
+  padding: 1rem 1.1rem;
+  border: 3px solid var(--color-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-panel) 90%, transparent);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.track-card-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+
+.track-card-copy {
+  font-weight: 700;
+}
+
+.track-braille.is-selected {
+  border-color: #38bdf8;
+  box-shadow: inset 0 0 0 3px #38bdf8;
+}
+
+.track-cursive.is-selected {
+  border-color: #f59e0b;
+  box-shadow: inset 0 0 0 3px #f59e0b;
+}
+
+.statusboard {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.status-grid {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  padding-bottom: 0.5rem;
+}
+
+.status-card {
+  border: 2px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-panel) 88%, transparent);
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+}
+
+.status-card h2,
+.status-card p {
+  margin: 0;
+  font-weight: 700;
+}
+
+.meter-bar {
+  height: 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-surface-2);
+}
+
+.meter-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+}
+
+.goal-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.secondary-button.is-selected {
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 2px var(--color-accent);
+}
+
+.continue-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.badge-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-weight: 700;
+}
+
+.celebration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+}
+
+.celebration-card {
+  width: min(100%, 28rem);
+  border: 3px solid var(--color-accent);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  background: var(--color-panel);
+  display: grid;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-soft);
+  animation: celebrate-pop 0.45s ease-out;
+}
+
+.celebration-overlay.is-static .celebration-card {
+  animation: none;
+}
+
+.celebration-eyebrow,
+.celebration-title,
+.celebration-detail {
+  margin: 0;
+  font-weight: 700;
+}
+
+.celebration-title {
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+}
+
+@keyframes celebrate-pop {
+  from {
+    transform: scale(0.92);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebration-card {
+    animation: none;
+  }
+}

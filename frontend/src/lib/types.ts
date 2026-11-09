@@ -28,5 +28,32 @@ export type UserSettings = {
   haptics_enabled: boolean;
   haptics_intensity: number;
   handedness: "left" | "right";
+  daily_goal_minutes: 5 | 10 | 20;
   gamepad_mapping: Record<string, unknown> | null;
+};
+
+export type BadgePublic = {
+  key: string;
+  title: string;
+  description: string;
+  icon: string;
+  earned_at: string;
+};
+
+export type Statusboard = {
+  first_name: string;
+  tracks: string[];
+  level: number;
+  total_xp: number;
+  xp_into_level: number;
+  xp_for_next: number;
+  xp_progress_ratio: number;
+  streak_current: number;
+  streak_longest: number;
+  daily_goal_minutes: number;
+  today_active_seconds: number;
+  daily_goal_ratio: number;
+  unread_inbox: number;
+  latest_badges: BadgePublic[];
+  continue_targets: { track: string; label: string; path: string; hint: string }[];
 };

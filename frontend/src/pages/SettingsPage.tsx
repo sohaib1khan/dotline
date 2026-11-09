@@ -18,6 +18,76 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "tracks", label: "Tracks" },
 ];
 
+function TracksSettingsTab() {
+  const [tracks, setTracks] = useState<string[]>([]);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    void apiGet<{ tracks: string[] }>("/api/me/tracks")
+      .then((data) => setTracks(data.tracks))
+      .catch((err) => setError(err instanceof ApiError ? err.message : "Could not load tracks."));
+  }, []);
+
+  async function save(next: string[]) {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const data = await apiSend<{ tracks: string[] }>("PUT", "/api/me/tracks", { tracks: next });
+      setTracks(data.tracks);
+      setMessage("Tracks updated.");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not update tracks.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function toggle(track: string) {
+    const has = tracks.includes(track);
+    if (has && tracks.length === 1) {
+      setError("Keep at least one track enrolled.");
+      return;
+    }
+    const next = has ? tracks.filter((t) => t !== track) : [...tracks, track];
+    void save(next);
+  }
+
+  return (
+    <div className="settings-form">
+      <p className="page-copy">
+        <strong>Add or remove learning tracks.</strong> You need at least one.
+      </p>
+      <label className="field-label">
+        <input
+          type="checkbox"
+          checked={tracks.includes("braille")}
+          disabled={busy}
+          onChange={() => toggle("braille")}
+        />{" "}
+        Braille
+      </label>
+      <label className="field-label">
+        <input
+          type="checkbox"
+          checked={tracks.includes("cursive")}
+          disabled={busy}
+          onChange={() => toggle("cursive")}
+        />{" "}
+        Cursive
+      </label>
+      <FormStatus message={error} />
+      {message ? (
+        <p className="success-text" role="status">
+          {message}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function SettingsPage() {
   const formId = useId();
   const [tab, setTab] = useState<Tab>("display");
@@ -390,12 +460,7 @@ export function SettingsPage() {
         </form>
       ) : null}
 
-      {tab === "tracks" ? (
-        <div className="banner" role="status">
-          <strong>Tracks</strong>
-          <p>Add/remove Braille or Cursive arrives with the track picker in Phase 6.</p>
-        </div>
-      ) : null}
+      {tab === "tracks" ? <TracksSettingsTab /> : null}
     </section>
   );
 }

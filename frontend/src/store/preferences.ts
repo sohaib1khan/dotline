@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   haptics_enabled: true,
   haptics_intensity: 0.7,
   handedness: "right",
+  daily_goal_minutes: 10,
   gamepad_mapping: null,
 };
 

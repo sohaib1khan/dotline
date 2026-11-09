@@ -56,8 +56,42 @@ export function EntryGatePage() {
   }
 
   if (user?.email_verified_at) {
-    return <Navigate to={user.role === "admin" ? "/admin" : "/app"} replace />;
+    if (user.role === "admin") {
+      return <Navigate to="/admin" replace />;
+    }
+    return <LearnerHomeRedirect />;
   }
 
   return <LandingPage />;
+}
+
+function LearnerHomeRedirect() {
+  const [path, setPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void apiGet<{ tracks: string[] }>("/api/me/tracks")
+      .then((data) => {
+        if (!cancelled) setPath(data.tracks.length === 0 ? "/tracks" : "/app");
+      })
+      .catch(() => {
+        if (!cancelled) setPath("/tracks");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!path) {
+    return (
+      <div className="app-shell">
+        <main className="main-panel" aria-busy="true" aria-label="Loading Dotline">
+          <h1 className="brand">Dotline</h1>
+          <p className="status">Loading…</p>
+        </main>
+      </div>
+    );
+  }
+
+  return <Navigate to={path} replace />;
 }
