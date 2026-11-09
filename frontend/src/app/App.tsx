@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppFrame } from "@/app/AppFrame";
 import { Bootstrap } from "@/app/Bootstrap";
 import { RequireAuth } from "@/app/RequireAuth";
+import { TelemetryBridge } from "@/components/TelemetryBridge";
+import { AdminBugsPage } from "@/pages/AdminBugsPage";
 import { AdminDashboardPage } from "@/pages/AdminDashboardPage";
 import { AdminEmailSettingsPage } from "@/pages/AdminEmailSettingsPage";
 import { AdminXpDebugPage } from "@/pages/AdminXpDebugPage";
@@ -14,9 +16,11 @@ import { EntryGatePage } from "@/pages/EntryGatePage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { GamePlayPage } from "@/pages/GamePlayPage";
 import { GamesPage } from "@/pages/GamesPage";
+import { InboxPage } from "@/pages/InboxPage";
 import { InputDebugPage } from "@/pages/InputDebugPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { ProgressPage } from "@/pages/ProgressPage";
+import { ReportProblemPage } from "@/pages/ReportProblemPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { SetupPage } from "@/pages/SetupPage";
@@ -31,6 +35,7 @@ export function App() {
   return (
     <BrowserRouter>
       <Bootstrap>
+        <TelemetryBridge />
         <Routes>
           <Route path="/" element={<EntryGatePage />} />
           <Route path="/setup" element={<SetupPage />} />
@@ -52,14 +57,8 @@ export function App() {
               <Route path="/app/games" element={<GamesPage />} />
               <Route path="/app/games/:gameKey" element={<GamePlayPage />} />
               <Route path="/app/progress" element={<ProgressPage />} />
-              <Route
-                path="/app/inbox"
-                element={<StubPage title="Inbox" copy="Inbox arrives in Phase 11." />}
-              />
-              <Route
-                path="/app/report"
-                element={<StubPage title="Report a Problem" copy="Bug reports arrive in Phase 11." />}
-              />
+              <Route path="/app/inbox" element={<InboxPage />} />
+              <Route path="/app/report" element={<ReportProblemPage />} />
               <Route path="/app/settings" element={<SettingsPage />} />
             </Route>
           </Route>
@@ -79,10 +78,7 @@ export function App() {
                 path="/admin/content"
                 element={<StubPage title="Content" copy="Content CMS arrives in Phase 12." />}
               />
-              <Route
-                path="/admin/bugs"
-                element={<StubPage title="Bug Reports" copy="Bug queue arrives in Phase 12." />}
-              />
+              <Route path="/admin/bugs" element={<AdminBugsPage />} />
               <Route
                 path="/admin/announcements"
                 element={<StubPage title="Announcements" copy="Announcements arrive in Phase 12." />}

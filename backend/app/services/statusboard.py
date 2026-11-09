@@ -2,28 +2,16 @@
 
 from __future__ import annotations
 
-import uuid
-
-from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.messaging import Message
 from app.models.user import User
 from app.services import badges as badge_service
+from app.services import inbox as inbox_service
 from app.services import lessons as lesson_service
 from app.services import streaks as streak_service
 from app.services import tracks as track_service
 from app.services import user_settings as settings_service
 from app.services import xp as xp_service
-
-
-def unread_inbox_count(db: Session, user_id: uuid.UUID) -> int:
-    personal = db.scalar(
-        select(func.count())
-        .select_from(Message)
-        .where(Message.user_id == user_id, Message.read_at.is_(None))
-    )
-    return int(personal or 0)
 
 
 def build_statusboard(db: Session, user: User) -> dict:
@@ -50,7 +38,7 @@ def build_statusboard(db: Session, user: User) -> dict:
         "daily_goal_minutes": goal_minutes,
         "today_active_seconds": active_seconds,
         "daily_goal_ratio": min(1.0, active_seconds / goal_seconds),
-        "unread_inbox": unread_inbox_count(db, user.id),
+        "unread_inbox": inbox_service.unread_count(db, user.id),
         "latest_badges": [
             {
                 "key": b.key,
