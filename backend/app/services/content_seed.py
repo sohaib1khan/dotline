@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from app.models.content import Lesson, Unit
 
 CONTENT_ROOT = Path(__file__).resolve().parent.parent / "content"
-BRAILLE_DIR = CONTENT_ROOT / "braille"
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -23,19 +22,20 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return data
 
 
-def seed_braille_units(db: Session) -> dict[str, int]:
-    """Upsert all braille unit YAML files. Returns counts."""
-    files = sorted(BRAILLE_DIR.glob("unit_*.yaml"))
+def seed_track_units(db: Session, track: str) -> dict[str, int]:
+    """Upsert all unit_*.yaml files for a track."""
+    track_dir = CONTENT_ROOT / track
+    files = sorted(track_dir.glob("unit_*.yaml"))
     units_upserted = 0
     lessons_upserted = 0
 
     for path in files:
         data = _load_yaml(path)
         order = int(data["order"])
-        unit = db.scalar(select(Unit).where(Unit.track == "braille", Unit.order == order))
+        unit = db.scalar(select(Unit).where(Unit.track == track, Unit.order == order))
         if unit is None:
             unit = Unit(
-                track="braille",
+                track=track,
                 order=order,
                 title=str(data["title"]),
                 description=str(data.get("description") or ""),
@@ -71,7 +71,6 @@ def seed_braille_units(db: Session) -> dict[str, int]:
                     setattr(lesson, key, value)
             lessons_upserted += 1
 
-        # Remove stale lesson rows for this unit that are no longer in YAML.
         existing = db.scalars(select(Lesson).where(Lesson.unit_id == unit.id)).all()
         for lesson in existing:
             if lesson.order not in seen_orders:
@@ -81,5 +80,23 @@ def seed_braille_units(db: Session) -> dict[str, int]:
     return {"units": units_upserted, "lessons": lessons_upserted}
 
 
+def seed_braille_units(db: Session) -> dict[str, int]:
+    return seed_track_units(db, "braille")
+
+
+def seed_cursive_units(db: Session) -> dict[str, int]:
+    return seed_track_units(db, "cursive")
+
+
+def load_cursive_strokes() -> dict[str, Any]:
+    path = CONTENT_ROOT / "cursive" / "strokes.yaml"
+    return _load_yaml(path)
+
+
 def seed_all_content(db: Session) -> dict[str, int]:
-    return seed_braille_units(db)
+    braille = seed_braille_units(db)
+    cursive = seed_cursive_units(db)
+    return {
+        "units": braille["units"] + cursive["units"],
+        "lessons": braille["lessons"] + cursive["lessons"],
+    }

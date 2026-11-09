@@ -1,0 +1,36 @@
+order: 1
+title: Warm-up strokes
+description: Practice the basic curves and loops used in cursive.
+lessons:
+  - order: 1
+    title: Undercurve & overcurve
+    type: trace
+    xp_reward: 15
+    content:
+      instruction: "Watch, then trace each warm-up stroke."
+      items:
+        - { id: undercurve, kind: warmup, key: undercurve, label: Undercurve }
+        - { id: overcurve, kind: warmup, key: overcurve, label: Overcurve }
+  - order: 2
+    title: Downcurve, slant, loop
+    type: trace
+    xp_reward: 15
+    content:
+      instruction: "Watch, then trace these building strokes."
+      items:
+        - { id: downcurve, kind: warmup, key: downcurve, label: Downcurve }
+        - { id: slant, kind: warmup, key: slant, label: Slant line }
+        - { id: loop, kind: warmup, key: loop, label: Loop }
+  - order: 3
+    title: Warm-up review
+    type: review
+    xp_reward: 25
+    content:
+      instruction: "Trace each stroke. Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: warmup, key: undercurve, label: Undercurve }
+        - { id: rv2, kind: warmup, key: loop, label: Loop }
+        - { id: rv3, kind: warmup, key: slant, label: Slant line }
+        - { id: rv4, kind: warmup, key: overcurve, label: Overcurve }
+        - { id: rv5, kind: warmup, key: downcurve, label: Downcurve }

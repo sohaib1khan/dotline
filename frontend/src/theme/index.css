@@ -820,3 +820,30 @@ kbd {
   display: grid;
   gap: 0.75rem;
 }
+
+.cursive-3d-shell {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.cursive-3d-stage {
+  height: min(28dvh, 220px);
+  border: 2px solid var(--color-border);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #0b1220;
+}
+
+.trace-wrap.is-offpath .cursive-canvas {
+  box-shadow: inset 0 0 0 3px var(--color-accent);
+}
+
+.cursive-canvas {
+  width: min(100%, 40rem);
+  max-height: 45dvh;
+  touch-action: none;
+  border: 2px solid var(--color-border);
+  border-radius: 0.75rem;
+  cursor: crosshair;
+  justify-self: center;
+}

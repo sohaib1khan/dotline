@@ -4,12 +4,15 @@ from pathlib import Path
 
 import yaml
 
-BRAILLE = Path(__file__).resolve().parents[1] / "content" / "braille"
+CONTENT = Path(__file__).resolve().parents[1] / "content"
+BRAILLE = CONTENT / "braille"
+CURSIVE = CONTENT / "cursive"
 
 
 def test_all_unit_files_present() -> None:
-    files = sorted(BRAILLE.glob("unit_*.yaml"))
-    assert len(files) == 8
+    assert len(sorted(BRAILLE.glob("unit_*.yaml"))) == 8
+    assert len(sorted(CURSIVE.glob("unit_*.yaml"))) == 6
+    assert (CURSIVE / "strokes.yaml").is_file()
 
 
 def test_unit_orders_unique_and_complete() -> None:
@@ -23,3 +26,11 @@ def test_unit_orders_unique_and_complete() -> None:
         assert types <= {"learn", "write", "read", "review"}
         assert "review" in types
     assert sorted(orders) == list(range(1, 9))
+
+
+def test_cursive_stroke_library_complete() -> None:
+    data = yaml.safe_load((CURSIVE / "strokes.yaml").read_text(encoding="utf-8"))
+    letters = data["letters"]
+    assert len(letters) == 52
+    assert "a" in letters and "Z" in letters
+    assert "undercurve" in data["warmups"]

@@ -8,6 +8,8 @@ import { AdminXpDebugPage } from "@/pages/AdminXpDebugPage";
 import { BrailleLessonPage } from "@/pages/BrailleLessonPage";
 import { BrailleTrackPage } from "@/pages/BrailleTrackPage";
 import { CheckEmailPage } from "@/pages/CheckEmailPage";
+import { CursiveLessonPage } from "@/pages/CursiveLessonPage";
+import { CursiveTrackPage } from "@/pages/CursiveTrackPage";
 import { EntryGatePage } from "@/pages/EntryGatePage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { InputDebugPage } from "@/pages/InputDebugPage";
@@ -16,6 +18,7 @@ import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { SetupPage } from "@/pages/SetupPage";
 import { SignupPage } from "@/pages/SignupPage";
+import { SignatureStudioPage } from "@/pages/SignatureStudioPage";
 import { StatusboardPage } from "@/pages/StatusboardPage";
 import { StubPage } from "@/pages/StubPage";
 import { TracksPage } from "@/pages/TracksPage";
@@ -40,10 +43,9 @@ export function App() {
               <Route path="/app" element={<StatusboardPage />} />
               <Route path="/app/braille" element={<BrailleTrackPage />} />
               <Route path="/app/braille/lessons/:lessonId" element={<BrailleLessonPage />} />
-              <Route
-                path="/app/cursive"
-                element={<StubPage title="Cursive" copy="Cursive lessons arrive in Phase 8." />}
-              />
+              <Route path="/app/cursive" element={<CursiveTrackPage />} />
+              <Route path="/app/cursive/lessons/:lessonId" element={<CursiveLessonPage />} />
+              <Route path="/app/cursive/signature" element={<SignatureStudioPage />} />
               <Route
                 path="/app/games"
                 element={<StubPage title="Games" copy="Games arrive in Phase 9." />}

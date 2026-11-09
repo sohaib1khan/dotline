@@ -1,0 +1,32 @@
+order: 5
+title: Words
+description: Short common words in cursive.
+lessons:
+  - order: 1
+    title: Short words
+    type: trace
+    xp_reward: 25
+    content:
+      instruction: "Spell each word one letter at a time."
+      items:
+        - { id: c, kind: letter, key: c, label: "c in cat" }
+        - { id: a, kind: letter, key: a, label: "a in cat" }
+        - { id: t, kind: letter, key: t, label: "t in cat" }
+        - { id: m, kind: letter, key: m, label: "m in me" }
+        - { id: e, kind: letter, key: e, label: "e in me" }
+        - { id: y, kind: letter, key: y, label: "y in you" }
+        - { id: o, kind: letter, key: o, label: "o in you" }
+        - { id: u, kind: letter, key: u, label: "u in you" }
+  - order: 2
+    title: Words review
+    type: review
+    xp_reward: 35
+    content:
+      instruction: "Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: letter, key: c, label: c }
+        - { id: rv2, kind: letter, key: a, label: a }
+        - { id: rv3, kind: letter, key: t, label: t }
+        - { id: rv4, kind: letter, key: m, label: m }
+        - { id: rv5, kind: letter, key: e, label: e }

@@ -1,0 +1,41 @@
+order: 3
+title: Connecting letters
+description: Practice common joins between lowercase letters.
+lessons:
+  - order: 1
+    title: Easy joins
+    type: trace
+    xp_reward: 20
+    content:
+      instruction: "Trace each letter in the pair, one after another."
+      items:
+        - { id: o, kind: letter, key: o, label: "o (in on)" }
+        - { id: n, kind: letter, key: n, label: "n (in on)" }
+        - { id: i, kind: letter, key: i, label: "i (in it)" }
+        - { id: t, kind: letter, key: t, label: "t (in it)" }
+        - { id: a, kind: letter, key: a, label: "a (in at)" }
+  - order: 2
+    title: More joins
+    type: trace
+    xp_reward: 20
+    content:
+      instruction: "Keep the pen moving between related letters."
+      items:
+        - { id: c, kind: letter, key: c, label: "c (in cat)" }
+        - { id: a2, kind: letter, key: a, label: "a (in cat)" }
+        - { id: t2, kind: letter, key: t, label: "t (in cat)" }
+        - { id: h, kind: letter, key: h, label: "h (in he)" }
+        - { id: e, kind: letter, key: e, label: "e (in he)" }
+  - order: 3
+    title: Joins review
+    type: review
+    xp_reward: 30
+    content:
+      instruction: "Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: letter, key: o, label: o }
+        - { id: rv2, kind: letter, key: n, label: n }
+        - { id: rv3, kind: letter, key: a, label: a }
+        - { id: rv4, kind: letter, key: t, label: t }
+        - { id: rv5, kind: letter, key: e, label: e }

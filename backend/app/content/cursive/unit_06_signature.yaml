@@ -1,0 +1,25 @@
+order: 6
+title: Signature Studio
+description: Practice the letters in your name, then write your signature.
+lessons:
+  - order: 1
+    title: Signature Studio
+    type: signature
+    xp_reward: 50
+    content:
+      instruction: "Open Signature Studio to practice your name and save a signature."
+      studio_path: "/app/cursive/signature"
+      items: []
+  - order: 2
+    title: Signature review
+    type: review
+    xp_reward: 30
+    content:
+      instruction: "Trace a few letters from a sample name. Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: letter, key: A, label: A }
+        - { id: rv2, kind: letter, key: d, label: d }
+        - { id: rv3, kind: letter, key: a, label: a }
+        - { id: rv4, kind: letter, key: m, label: m }
+        - { id: rv5, kind: letter, key: s, label: s }

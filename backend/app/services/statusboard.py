@@ -68,12 +68,12 @@ def build_statusboard(db: Session, user: User) -> dict:
 def _continue_targets(db: Session, user: User, enrolled: list[str]) -> list[dict]:
     targets: list[dict] = []
     for track in enrolled:
-        if track == "braille":
-            path = lesson_service.next_braille_lesson_path(db, user) or "/app/braille"
-            hint = "Jump back into your next unlocked braille lesson."
-        else:
-            path = f"/app/{track}"
-            hint = "Cursive lessons arrive in a later phase."
+        path = lesson_service.next_track_lesson_path(db, user, track) or f"/app/{track}"
+        hint = (
+            "Jump back into your next unlocked braille lesson."
+            if track == "braille"
+            else "Jump back into your next unlocked cursive lesson."
+        )
         targets.append(
             {
                 "track": track,

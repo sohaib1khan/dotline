@@ -221,7 +221,7 @@ def complete_lesson(
     pass_score = PASS_DEFAULT
     if lesson.type == "review":
         pass_score = float((lesson.content or {}).get("pass_score") or PASS_DEFAULT)
-    elif lesson.type in {"learn", "write", "read"}:
+    elif lesson.type in {"learn", "write", "read", "trace", "signature"}:
         pass_score = 60.0
 
     passed = score >= pass_score
@@ -269,6 +269,18 @@ def complete_lesson(
                 )
                 if badge:
                     new_badges.append(badge)
+            if lesson.unit.track == "cursive" and lesson.unit.order == 1 and lesson.order == 1:
+                badge = badge_service.award_badge(
+                    db, user_id=user.id, badge_key="first_loop", commit=False
+                )
+                if badge:
+                    new_badges.append(badge)
+            if lesson.type == "signature":
+                badge = badge_service.award_badge(
+                    db, user_id=user.id, badge_key="signed_it", commit=False
+                )
+                if badge:
+                    new_badges.append(badge)
             new_badges.extend(badge_service.evaluate_badges(db, user.id))
 
     db.commit()
@@ -301,11 +313,25 @@ def complete_lesson(
     }
 
 
-def next_braille_lesson_path(db: Session, user: User) -> str | None:
-    if "braille" not in track_service.list_tracks(db, user.id) and user.role != "admin":
+def next_track_lesson_path(db: Session, user: User, track: str) -> str | None:
+    if track not in track_service.list_tracks(db, user.id) and user.role != "admin":
         return None
-    catalog = list_track_curriculum(db, user, "braille")
+    catalog = list_track_curriculum(db, user, track)
     lesson_id = catalog.get("next_lesson_id")
     if lesson_id is None:
-        return "/app/braille"
-    return f"/app/braille/lessons/{lesson_id}"
+        return f"/app/{track}"
+    # Signature lessons open the studio directly when content says so.
+    lesson = db.get(Lesson, lesson_id)
+    if lesson and lesson.type == "signature":
+        studio = (lesson.content or {}).get("studio_path")
+        if isinstance(studio, str) and studio:
+            return studio
+    return f"/app/{track}/lessons/{lesson_id}"
+
+
+def next_braille_lesson_path(db: Session, user: User) -> str | None:
+    return next_track_lesson_path(db, user, "braille")
+
+
+def next_cursive_lesson_path(db: Session, user: User) -> str | None:
+    return next_track_lesson_path(db, user, "cursive")

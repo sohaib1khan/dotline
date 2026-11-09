@@ -9,6 +9,7 @@ from app.models.gamification import Badge, GameScore, LessonProgress, Streak, Us
 from app.models.messaging import Message
 from app.models.session import SessionRecord
 from app.models.settings import AppSetting
+from app.models.signatures import SignaturePractice
 from app.models.user import User, UserSetting, UserTrack
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "ActivitySession",
     "ActivityDaily",
     "AdminDashboardLayout",
+    "SignaturePractice",
 ]

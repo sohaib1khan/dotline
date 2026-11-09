@@ -1,0 +1,72 @@
+order: 2
+title: Lowercase families
+description: Undercurve, loop, overcurve, and downcurve letter groups.
+lessons:
+  - order: 1
+    title: Undercurve letters
+    type: trace
+    xp_reward: 25
+    content:
+      instruction: "Letters i t u w r s p j — watch, trace, then free write."
+      items:
+        - { id: i, kind: letter, key: i, label: i }
+        - { id: t, kind: letter, key: t, label: t }
+        - { id: u, kind: letter, key: u, label: u }
+        - { id: w, kind: letter, key: w, label: w }
+        - { id: r, kind: letter, key: r, label: r }
+        - { id: s, kind: letter, key: s, label: s }
+        - { id: p, kind: letter, key: p, label: p }
+        - { id: j, kind: letter, key: j, label: j }
+  - order: 2
+    title: Loop letters
+    type: trace
+    xp_reward: 25
+    content:
+      instruction: "Letters e l b h f k."
+      items:
+        - { id: e, kind: letter, key: e, label: e }
+        - { id: l, kind: letter, key: l, label: l }
+        - { id: b, kind: letter, key: b, label: b }
+        - { id: h, kind: letter, key: h, label: h }
+        - { id: f, kind: letter, key: f, label: f }
+        - { id: k, kind: letter, key: k, label: k }
+  - order: 3
+    title: Overcurve letters
+    type: trace
+    xp_reward: 25
+    content:
+      instruction: "Letters n m v x y z."
+      items:
+        - { id: n, kind: letter, key: n, label: n }
+        - { id: m, kind: letter, key: m, label: m }
+        - { id: v, kind: letter, key: v, label: v }
+        - { id: x, kind: letter, key: x, label: x }
+        - { id: y, kind: letter, key: y, label: y }
+        - { id: z, kind: letter, key: z, label: z }
+  - order: 4
+    title: Downcurve letters
+    type: trace
+    xp_reward: 25
+    content:
+      instruction: "Letters a c d g o q."
+      items:
+        - { id: a, kind: letter, key: a, label: a }
+        - { id: c, kind: letter, key: c, label: c }
+        - { id: d, kind: letter, key: d, label: d }
+        - { id: g, kind: letter, key: g, label: g }
+        - { id: o, kind: letter, key: o, label: o }
+        - { id: q, kind: letter, key: q, label: q }
+  - order: 5
+    title: Lowercase review
+    type: review
+    xp_reward: 35
+    content:
+      instruction: "Mixed lowercase. Need 80% to pass."
+      pass_score: 80
+      items:
+        - { id: rv1, kind: letter, key: a, label: a }
+        - { id: rv2, kind: letter, key: l, label: l }
+        - { id: rv3, kind: letter, key: n, label: n }
+        - { id: rv4, kind: letter, key: t, label: t }
+        - { id: rv5, kind: letter, key: g, label: g }
+        - { id: rv6, kind: letter, key: y, label: y }
