@@ -5,7 +5,8 @@ import { sampleGlyph, scoreAgainstGuide, type GlyphDef, type Point } from "@/fea
 import { TraceScene3D } from "@/features/cursive/TraceScene3D";
 import type { TraceMode } from "@/features/cursive/TraceCanvas";
 import { feedback } from "@/feedback";
-import { ApiError, apiGet, apiPost } from "@/lib/api";
+import { ApiError, apiGet } from "@/lib/api";
+import { postLessonComplete } from "@/pwa/queuedPost";
 import { usePreferences } from "@/store/preferences";
 
 type LessonItem = {
@@ -125,11 +126,23 @@ export function CursiveLessonPlayer({ lesson }: { lesson: LessonDetail }) {
     const avg = Math.round(finalScores.reduce((a, b) => a + b, 0) / total);
     const correct = finalScores.filter((s) => s >= 55).length;
     try {
-      const result = await apiPost<CompleteResult>(`/api/lessons/${lesson.id}/complete`, {
-        score: avg,
-        correct,
-        total,
-      });
+      const passScore = lesson.content.pass_score ?? 70;
+      const result = await postLessonComplete<CompleteResult>(
+        lesson.id,
+        { score: avg, correct, total },
+        {
+          passed: avg >= passScore,
+          pass_score: passScore,
+          score: avg,
+          correct,
+          total,
+          xp_awarded: 0,
+          leveled_up: false,
+          level: null,
+          new_badges: [],
+          next_lesson_id: null,
+        },
+      );
       setDone(result);
       const queue: CelebrationPayload[] = [];
       if (result.leveled_up && result.level) {

@@ -26,7 +26,11 @@ export function CursiveLessonPage() {
     if (!lessonId) return;
     setLesson(null);
     void apiGet<LessonDetail>(`/api/lessons/${lessonId}`)
-      .then(setLesson)
+      .then(async (data) => {
+        setLesson(data);
+        const { warmLessonCache } = await import("@/pwa/offlineCache");
+        await warmLessonCache([`/api/lessons/${lessonId}`, "/api/cursive/strokes"]);
+      })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Could not load lesson."));
   }, [lessonId]);
 

@@ -82,6 +82,31 @@ def create_app() -> FastAPI:
         if assets_dir.is_dir():
             app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
+        @app.get("/sw.js", response_model=None, include_in_schema=False)
+        def service_worker() -> Response:
+            path = STATIC_DIR / "sw.js"
+            if not path.is_file():
+                return JSONResponse({"detail": "Service worker missing"}, status_code=404)
+            return FileResponse(
+                path,
+                media_type="application/javascript",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Service-Worker-Allowed": "/",
+                },
+            )
+
+        @app.get("/manifest.webmanifest", response_model=None, include_in_schema=False)
+        def web_manifest() -> Response:
+            path = STATIC_DIR / "manifest.webmanifest"
+            if not path.is_file():
+                return JSONResponse({"detail": "Manifest missing"}, status_code=404)
+            return FileResponse(
+                path,
+                media_type="application/manifest+json",
+                headers={"Cache-Control": "no-cache"},
+            )
+
         @app.get("/{full_path:path}", response_model=None)
         def spa_fallback(full_path: str) -> Response:
             candidate = STATIC_DIR / full_path

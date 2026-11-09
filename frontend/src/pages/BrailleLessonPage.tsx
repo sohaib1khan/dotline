@@ -13,7 +13,11 @@ export function BrailleLessonPage() {
     setLesson(null);
     setError("");
     void apiGet<LessonDetail>(`/api/lessons/${lessonId}`)
-      .then(setLesson)
+      .then(async (data) => {
+        setLesson(data);
+        const { warmLessonCache } = await import("@/pwa/offlineCache");
+        await warmLessonCache([`/api/lessons/${lessonId}`]);
+      })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Could not load lesson."));
   }, [lessonId]);
 

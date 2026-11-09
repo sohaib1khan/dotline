@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { Field, FormStatus, type SubmitHandler } from "@/components/AuthForm";
+import { InstallAppCard } from "@/components/InstallAppCard";
 import { feedback, getConnectedGamepads, getVoices, setGamepadMapping } from "@/feedback";
 import { ApiError, apiGet, apiSend } from "@/lib/api";
 import type { UserPublic, UserSettings } from "@/lib/types";
@@ -201,6 +202,8 @@ export function SettingsPage() {
           {message}
         </p>
       ) : null}
+
+      <InstallAppCard />
 
       {tab === "account" ? (
         <form className="settings-form" onSubmit={onAccountSubmit} noValidate>

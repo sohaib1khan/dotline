@@ -5,7 +5,8 @@ import { CelebrationOverlay, type CelebrationPayload } from "@/components/Celebr
 import { BrailleCell } from "@/features/braille/BrailleCell";
 import { feedback } from "@/feedback";
 import { subscribeInput } from "@/input";
-import { ApiError, apiPost } from "@/lib/api";
+import { ApiError } from "@/lib/api";
+import { postLessonComplete } from "@/pwa/queuedPost";
 
 export type LessonItem = {
   id: string;
@@ -197,11 +198,24 @@ export function LessonPlayer({ lesson }: Props) {
     const total = Math.max(1, finalAnswered || items.length);
     const score = Math.round((finalCorrect / total) * 100);
     try {
-      const result = await apiPost<CompleteResult>(`/api/lessons/${lesson.id}/complete`, {
-        score,
-        correct: finalCorrect,
-        total,
-      });
+      const passScore = lesson.content.pass_score ?? 70;
+      const result = await postLessonComplete<CompleteResult>(
+        lesson.id,
+        { score, correct: finalCorrect, total },
+        {
+          passed: score >= passScore,
+          pass_score: passScore,
+          score,
+          correct: finalCorrect,
+          total,
+          status: score >= passScore ? "completed" : "in_progress",
+          xp_awarded: 0,
+          leveled_up: false,
+          level: null,
+          new_badges: [],
+          next_lesson_id: null,
+        },
+      );
       setDone(result);
       const queue: CelebrationPayload[] = [];
       if (result.leveled_up && result.level) {
