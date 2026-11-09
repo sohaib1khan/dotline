@@ -6,11 +6,16 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
+from app.middleware.setup_gate import SetupGateMiddleware
+from app.routers import setup as setup_router
+
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Dotline", version="0.1.0")
+    app.add_middleware(SetupGateMiddleware)
+    app.include_router(setup_router.router)
 
     @app.get("/api/health")
     def health() -> dict[str, str]:

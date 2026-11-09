@@ -20,10 +20,14 @@ RUN apt-get update \
 
 COPY backend/pyproject.toml ./
 COPY backend/app ./app
+COPY backend/alembic ./alembic
+COPY backend/alembic.ini ./alembic.ini
 RUN pip install .
 
 COPY --from=frontend-build /frontend/dist ./static
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/entrypoint.sh"]

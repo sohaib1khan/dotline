@@ -58,8 +58,80 @@ body {
 }
 
 .status {
-  margin: 0;
+  margin: 0 0 1.25rem;
   font-size: 1.35rem;
   font-weight: 700;
   color: var(--color-ink);
+}
+
+.setup-panel {
+  width: min(100%, 36rem);
+  text-align: left;
+}
+
+.setup-panel .brand,
+.setup-panel .status {
+  text-align: center;
+}
+
+.setup-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.field-input {
+  min-height: 3.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--color-muted);
+  border-radius: 0.75rem;
+  background: #101a2b;
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.field-error {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffb4a8;
+}
+
+.primary-button {
+  min-height: 3.5rem;
+  margin-top: 0.5rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: var(--color-accent);
+  color: #04201b;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.banner {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border: 3px solid var(--color-accent);
+  border-radius: 1rem;
+  background: rgba(45, 212, 191, 0.12);
+}
+
+.banner p {
+  margin: 0.5rem 0 0;
+  font-weight: 700;
 }

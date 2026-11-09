@@ -1,4 +1,4 @@
-"""Database engine and session helpers (wired up in later phases)."""
+"""Database engine and session helpers."""
 
 from collections.abc import Generator
 
@@ -12,12 +12,8 @@ class Base(DeclarativeBase):
     """SQLAlchemy declarative base for all models."""
 
 
-def _build_engine():
-    settings = get_settings()
-    return create_engine(settings.database_url, pool_pre_ping=True)
-
-
-engine = _build_engine()
+settings = get_settings()
+engine = create_engine(settings.database_url, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 

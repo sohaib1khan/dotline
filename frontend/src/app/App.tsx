@@ -1,10 +1,19 @@
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AdminEmailSettingsPage } from "@/pages/AdminEmailSettingsPage";
+import { HomePage } from "@/pages/HomePage";
+import { SetupPage } from "@/pages/SetupPage";
+
 export function App() {
   return (
-    <div className="app-shell">
-      <main className="main-panel" aria-label="Dotline status">
-        <h1 className="brand">Dotline</h1>
-        <p className="status">Dotline is running</p>
-      </main>
-    </div>
+    <BrowserRouter>
+      <div className="app-shell">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/setup" element={<SetupPage />} />
+          <Route path="/admin/settings/email" element={<AdminEmailSettingsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
