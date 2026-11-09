@@ -543,3 +543,21 @@ kbd {
   font: inherit;
   font-weight: 700;
 }
+
+.touch-braille {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.input-log {
+  margin: 1rem 0 0;
+  padding-left: 1.25rem;
+  max-height: 40dvh;
+  overflow: auto;
+  font-weight: 700;
+}
+
+.input-log code {
+  font-size: 0.9em;
+  word-break: break-word;
+}

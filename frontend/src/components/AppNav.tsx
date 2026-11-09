@@ -22,6 +22,7 @@ const ADMIN_ITEMS: NavItem[] = [
   { to: "/admin/bugs", label: "Bugs" },
   { to: "/admin/announcements", label: "Announce" },
   { to: "/admin/settings/email", label: "Settings" },
+  { to: "/admin/debug/input", label: "Input debug" },
 ];
 
 export function AppNav({ mode }: { mode: "learner" | "admin" }) {

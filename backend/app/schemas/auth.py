@@ -27,6 +27,12 @@ class MessageResponse(BaseModel):
     message: str
 
 
+class SignupResponse(BaseModel):
+    ok: bool = True
+    message: str
+    verification_required: bool = False
+
+
 class UserPublic(BaseModel):
     id: uuid.UUID
     first_name: str

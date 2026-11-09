@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { Field, FormStatus, type SubmitHandler } from "@/components/AuthForm";
+import { feedback, getConnectedGamepads, getVoices } from "@/feedback";
 import { ApiError, apiGet, apiSend } from "@/lib/api";
 import type { UserPublic, UserSettings } from "@/lib/types";
 import { useAuth } from "@/store/auth";
@@ -231,10 +232,168 @@ export function SettingsPage() {
         </form>
       ) : null}
 
-      {tab === "sound" || tab === "haptics" || tab === "handedness" || tab === "tracks" ? (
+      {tab === "sound" ? (
+        <form
+          className="settings-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveDisplay({
+              volume: settings.volume,
+              speech_enabled: settings.speech_enabled,
+              speech_rate: settings.speech_rate,
+            });
+          }}
+        >
+          <label className="field-label" htmlFor="volume">
+            Master volume ({Math.round(settings.volume * 100)}%)
+          </label>
+          <input
+            id="volume"
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={settings.volume}
+            onChange={(event) => setSettings({ volume: Number(event.target.value) })}
+          />
+          <label className="field-label">
+            <input
+              type="checkbox"
+              checked={settings.speech_enabled}
+              onChange={(event) => setSettings({ speech_enabled: event.target.checked })}
+            />{" "}
+            Speech on
+          </label>
+          <label className="field-label" htmlFor="speech-rate">
+            Speech rate ({settings.speech_rate.toFixed(1)}x)
+          </label>
+          <input
+            id="speech-rate"
+            type="range"
+            min={0.5}
+            max={2}
+            step={0.1}
+            value={settings.speech_rate}
+            onChange={(event) => setSettings({ speech_rate: Number(event.target.value) })}
+          />
+          <p className="meter">Voices available: {getVoices().length || "loading/system default"}</p>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => feedback.speak("Dotline speech is working at your chosen rate.")}
+          >
+            Test speech
+          </button>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => feedback.correct("Sound test")}
+          >
+            Test sound
+          </button>
+          <button className="primary-button" type="submit" disabled={busy}>
+            Save sound & speech
+          </button>
+        </form>
+      ) : null}
+
+      {tab === "haptics" ? (
+        <form
+          className="settings-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveDisplay({
+              haptics_enabled: settings.haptics_enabled,
+              haptics_intensity: settings.haptics_intensity,
+            });
+          }}
+        >
+          {feedback.isIphoneSafari() ? (
+            <div className="banner" role="status">
+              <strong>Vibration is not available in iPhone Safari.</strong>
+              <p>Controller rumble can still work if a gamepad is connected.</p>
+            </div>
+          ) : (
+            <>
+              <label className="field-label">
+                <input
+                  type="checkbox"
+                  checked={settings.haptics_enabled}
+                  onChange={(event) => setSettings({ haptics_enabled: event.target.checked })}
+                />{" "}
+                Vibration / haptics on
+              </label>
+              <label className="field-label" htmlFor="haptics-intensity">
+                Intensity ({Math.round(settings.haptics_intensity * 100)}%)
+              </label>
+              <input
+                id="haptics-intensity"
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={settings.haptics_intensity}
+                onChange={(event) => setSettings({ haptics_intensity: Number(event.target.value) })}
+              />
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => feedback.testVibration()}
+                disabled={!feedback.supportsPhoneVibration()}
+              >
+                Test vibration
+              </button>
+            </>
+          )}
+          <p className="meter">
+            Controller:{" "}
+            {getConnectedGamepads()[0]?.id ?? "none detected"}
+          </p>
+          <button className="secondary-button" type="button" onClick={() => feedback.testRumble()}>
+            Test rumble
+          </button>
+          <button className="primary-button" type="submit" disabled={busy}>
+            Save haptics
+          </button>
+        </form>
+      ) : null}
+
+      {tab === "handedness" ? (
+        <form
+          className="settings-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveDisplay({ handedness: settings.handedness });
+          }}
+        >
+          <label className="field-label">
+            <input
+              type="radio"
+              name="handedness"
+              checked={settings.handedness === "right"}
+              onChange={() => setSettings({ handedness: "right" })}
+            />{" "}
+            Right-handed
+          </label>
+          <label className="field-label">
+            <input
+              type="radio"
+              name="handedness"
+              checked={settings.handedness === "left"}
+              onChange={() => setSettings({ handedness: "left" })}
+            />{" "}
+            Left-handed
+          </label>
+          <button className="primary-button" type="submit" disabled={busy}>
+            Save handedness
+          </button>
+        </form>
+      ) : null}
+
+      {tab === "tracks" ? (
         <div className="banner" role="status">
-          <strong>{TABS.find((item) => item.id === tab)?.label} controls</strong>
-          <p>Structure is in place. Full controls arrive in later phases.</p>
+          <strong>Tracks</strong>
+          <p>Add/remove Braille or Cursive arrives with the track picker in Phase 6.</p>
         </div>
       ) : null}
     </section>

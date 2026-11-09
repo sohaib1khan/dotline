@@ -61,7 +61,10 @@ export function SignupPage() {
 
     setSubmitting(true);
     try {
-      await apiPost("/api/auth/signup", {
+      const result = await apiPost<{
+        message: string;
+        verification_required?: boolean;
+      }>("/api/auth/signup", {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         username: username.trim(),
@@ -69,7 +72,11 @@ export function SignupPage() {
         password,
         confirm_password: confirmPassword,
       });
-      navigate("/check-email", { state: { email } });
+      if (result.verification_required) {
+        navigate("/check-email", { state: { email } });
+      } else {
+        navigate("/login", { state: { notice: result.message } });
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         if (Object.keys(err.fieldErrors).length > 0) {

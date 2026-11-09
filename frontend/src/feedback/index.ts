@@ -1,0 +1,62 @@
+import { audioFeedback } from "@/feedback/audio";
+import { hapticsFeedback, isIphoneSafari, supportsPhoneVibration } from "@/feedback/haptics";
+import { speak } from "@/feedback/speech";
+import { usePreferences } from "@/store/preferences";
+
+function prefs() {
+  return usePreferences.getState().settings;
+}
+
+export const feedback = {
+  dot(dot: number) {
+    const { volume, haptics_enabled, haptics_intensity } = prefs();
+    audioFeedback.dot(dot, volume);
+    if (haptics_enabled) hapticsFeedback.offPath(haptics_intensity * 0.5);
+  },
+  correct(message = "Correct") {
+    const p = prefs();
+    audioFeedback.correct(p.volume);
+    if (p.speech_enabled) speak(message, p.speech_rate);
+    if (p.haptics_enabled) hapticsFeedback.correct(p.haptics_intensity);
+  },
+  wrong(message = "Try again") {
+    const p = prefs();
+    audioFeedback.wrong(p.volume);
+    if (p.speech_enabled) speak(message, p.speech_rate);
+    if (p.haptics_enabled) hapticsFeedback.wrong(p.haptics_intensity);
+  },
+  levelUp(message = "Level up") {
+    const p = prefs();
+    audioFeedback.levelUp(p.volume);
+    if (p.speech_enabled) speak(message, p.speech_rate);
+    if (p.haptics_enabled) hapticsFeedback.levelUp(p.haptics_intensity);
+  },
+  badge(message = "Badge earned") {
+    const p = prefs();
+    audioFeedback.badge(p.volume);
+    if (p.speech_enabled) speak(message, p.speech_rate);
+    if (p.haptics_enabled) hapticsFeedback.correct(p.haptics_intensity);
+  },
+  offPath() {
+    const p = prefs();
+    audioFeedback.offPath(p.volume);
+    if (p.haptics_enabled) hapticsFeedback.offPath(p.haptics_intensity);
+  },
+  speak(text: string) {
+    const p = prefs();
+    if (p.speech_enabled) speak(text, p.speech_rate);
+  },
+  testVibration() {
+    const p = prefs();
+    hapticsFeedback.test(p.haptics_intensity);
+  },
+  testRumble() {
+    const p = prefs();
+    hapticsFeedback.test(p.haptics_intensity);
+  },
+  supportsPhoneVibration,
+  isIphoneSafari,
+};
+
+export { getVoices } from "@/feedback/speech";
+export { getConnectedGamepads } from "@/input/gamepad";

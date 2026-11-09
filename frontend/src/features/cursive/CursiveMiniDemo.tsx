@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { feedback } from "@/feedback";
+import { emitStrokeFromPointer } from "@/input/pointer";
 
-/** Simple cursive-ish "a" guide path in viewBox 0 0 200 160 */
 const GUIDE =
   "M 120 95 C 120 55, 70 45, 55 75 C 42 102, 70 125, 100 118 C 125 112, 135 95, 132 78 L 132 130";
 
@@ -25,6 +26,7 @@ export function CursiveMiniDemo() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
   const points = useRef<{ x: number; y: number }[]>([]);
+  const lastOffPathAt = useRef(0);
   const [result, setResult] = useState<"idle" | "correct" | "wrong">("idle");
 
   useEffect(() => {
@@ -48,25 +50,45 @@ export function CursiveMiniDemo() {
     };
   }
 
+  function emitStroke(event: ReactPointerEvent<HTMLCanvasElement>, phase: "start" | "move" | "end") {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    emitStrokeFromPointer(event.nativeEvent, canvas.getBoundingClientRect(), phase);
+  }
+
   function onPointerDown(event: ReactPointerEvent<HTMLCanvasElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
     drawing.current = true;
     points.current = [pointerPos(event)];
     setResult("idle");
+    emitStroke(event, "start");
     redraw();
   }
 
   function onPointerMove(event: ReactPointerEvent<HTMLCanvasElement>) {
     if (!drawing.current) return;
-    points.current.push(pointerPos(event));
+    const point = pointerPos(event);
+    points.current.push(point);
+    emitStroke(event, "move");
+    if (isOffPath(point) && Date.now() - lastOffPathAt.current > 180) {
+      lastOffPathAt.current = Date.now();
+      feedback.offPath();
+    }
     redraw();
   }
 
-  function onPointerUp() {
+  function onPointerUp(event: ReactPointerEvent<HTMLCanvasElement>) {
     if (!drawing.current) return;
     drawing.current = false;
+    emitStroke(event, "end");
     const score = scoreTrace(points.current);
-    setResult(score >= 0.55 ? "correct" : "wrong");
+    if (score >= 0.55) {
+      setResult("correct");
+      feedback.correct("Nice tracing.");
+    } else {
+      setResult("wrong");
+      feedback.wrong("Stay closer to the guide.");
+    }
   }
 
   function clear() {
@@ -109,6 +131,15 @@ export function CursiveMiniDemo() {
   );
 }
 
+function isOffPath(point: { x: number; y: number }) {
+  const mapped = { x: (point.x / 360) * 200, y: (point.y / 240) * 160 };
+  let best = Infinity;
+  for (const guide of GUIDE_POINTS) {
+    best = Math.min(best, distance(mapped.x, mapped.y, guide.x, guide.y));
+  }
+  return best > 28;
+}
+
 function drawScene(
   ctx: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
@@ -148,7 +179,6 @@ function scoreTrace(stroke: { x: number; y: number }[]): number {
     x: (p.x / 360) * 200,
     y: (p.y / 240) * 160,
   }));
-
   let hits = 0;
   for (const guide of GUIDE_POINTS) {
     let best = Infinity;

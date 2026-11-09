@@ -111,7 +111,8 @@ def register_learner(
     email: str,
     password: str,
     confirm_password: str,
-) -> User:
+) -> tuple[User, bool]:
+    """Create a learner. Returns (user, verification_required)."""
     if not settings_service.signups_open(db):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -140,6 +141,7 @@ def register_learner(
             detail={"username": "This username is already taken."},
         )
 
+    email_ready = settings_service.email_is_configured(db)
     user = User(
         first_name=first,
         last_name=last,
@@ -147,13 +149,20 @@ def register_learner(
         email=mail,
         password_hash=hash_password(pwd),
         role=UserRole.LEARNER.value,
-        email_verified_at=None,
+        # Without Resend, auto-verify so local/MVP sign-ups can proceed.
+        email_verified_at=datetime.now(UTC) if not email_ready else None,
         is_active=True,
     )
     db.add(user)
     db.flush()
     db.add(UserSetting(user_id=user.id))
     db.flush()
+
+    if not email_ready:
+        db.commit()
+        db.refresh(user)
+        return user, False
+
     try:
         send_verification_email(db, user, commit=False)
         db.commit()
@@ -161,7 +170,7 @@ def register_learner(
     except HTTPException:
         db.rollback()
         raise
-    return user
+    return user, True
 
 
 def send_verification_email(db: Session, user: User, *, commit: bool = True) -> None:

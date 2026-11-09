@@ -58,8 +58,10 @@ def email_is_configured(db: Session) -> bool:
 
 
 def signups_open(db: Session) -> bool:
-    if not email_is_configured(db):
-        return False
+    """Learner sign-ups are open by default; admin can close via signups.open.
+
+    Email/Resend is optional: without it, new accounts are auto-verified.
+    """
     flag = get_setting(db, KEY_SIGNUPS_OPEN)
     if flag is None:
         return True

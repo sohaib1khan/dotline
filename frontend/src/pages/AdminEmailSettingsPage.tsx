@@ -56,7 +56,7 @@ export function AdminEmailSettingsPage() {
       setSettings(data);
       setApiKey("");
       setReplacingKey(false);
-      setSuccess("Email settings saved. Sign-ups can open once this is configured.");
+      setSuccess("Email settings saved. New sign-ups will require email verification.");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Save failed.");
     } finally {
@@ -91,8 +91,9 @@ export function AdminEmailSettingsPage() {
       <div className="banner" role="status">
         <strong>Resend email can be configured here whenever you are ready.</strong>
         <p>
-          Until a Resend API key and From email are saved, learner sign-ups stay closed. The key is
-          encrypted at rest and never shown in full again after saving.
+          Learner sign-ups work without email; accounts are auto-verified until Resend is
+          configured. After you save a key and From address, new sign-ups require email
+          verification. The key is encrypted at rest and never shown in full again after saving.
         </p>
       </div>
 
@@ -149,9 +150,11 @@ export function AdminEmailSettingsPage() {
             <strong>
               {settings.configured
                 ? settings.signups_open
-                  ? "Configured · sign-ups open"
+                  ? "Configured · sign-ups open (verification required)"
                   : "Configured · sign-ups closed"
-                : "Not configured · sign-ups closed"}
+                : settings.signups_open
+                  ? "Not configured · sign-ups open (auto-verify)"
+                  : "Not configured · sign-ups closed"}
             </strong>
           </p>
 

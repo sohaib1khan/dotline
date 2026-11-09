@@ -7,6 +7,7 @@ import { AdminEmailSettingsPage } from "@/pages/AdminEmailSettingsPage";
 import { CheckEmailPage } from "@/pages/CheckEmailPage";
 import { EntryGatePage } from "@/pages/EntryGatePage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
+import { InputDebugPage } from "@/pages/InputDebugPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { SettingsPage } from "@/pages/SettingsPage";
@@ -87,6 +88,7 @@ export function App() {
                 element={<StubPage title="Announcements" copy="Announcements arrive in Phase 12." />}
               />
               <Route path="/admin/settings/email" element={<AdminEmailSettingsPage />} />
+              <Route path="/admin/debug/input" element={<InputDebugPage />} />
             </Route>
           </Route>
 

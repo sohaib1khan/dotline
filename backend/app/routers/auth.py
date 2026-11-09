@@ -15,6 +15,7 @@ from app.schemas.auth import (
     MessageResponse,
     ResetPasswordRequest,
     SignupRequest,
+    SignupResponse,
     UserPublic,
     VerifyEmailRequest,
 )
@@ -100,10 +101,10 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)) 
     return MessageResponse(message="Logged out")
 
 
-@router.post("/signup", response_model=MessageResponse, dependencies=[Depends(require_csrf)])
+@router.post("/signup", response_model=SignupResponse, dependencies=[Depends(require_csrf)])
 @limiter.limit("10/minute")
-def signup(request: Request, payload: SignupRequest, db: Session = Depends(get_db)) -> MessageResponse:
-    auth_service.register_learner(
+def signup(request: Request, payload: SignupRequest, db: Session = Depends(get_db)) -> SignupResponse:
+    _, verification_required = auth_service.register_learner(
         db,
         first_name=payload.first_name,
         last_name=payload.last_name,
@@ -112,7 +113,15 @@ def signup(request: Request, payload: SignupRequest, db: Session = Depends(get_d
         password=payload.password,
         confirm_password=payload.confirm_password,
     )
-    return MessageResponse(message="Account created. Check your email to verify.")
+    if verification_required:
+        return SignupResponse(
+            message="Account created. Check your email to verify.",
+            verification_required=True,
+        )
+    return SignupResponse(
+        message="Account created. You can log in now.",
+        verification_required=False,
+    )
 
 
 @router.post("/verify-email", response_model=MeResponse, dependencies=[Depends(require_csrf)])

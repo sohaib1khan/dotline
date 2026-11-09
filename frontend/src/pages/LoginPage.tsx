@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthShell, Field, FormStatus, type SubmitHandler } from "@/components/AuthForm";
 import { ApiError, apiGet, apiPost, clearCsrf } from "@/lib/api";
 import type { MeResponse, UserSettings } from "@/lib/types";
@@ -8,6 +8,11 @@ import { usePreferences } from "@/store/preferences";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const notice =
+    typeof (location.state as { notice?: unknown } | null)?.notice === "string"
+      ? (location.state as { notice: string }).notice
+      : "";
   const setUser = useAuth((s) => s.setUser);
   const hydrate = usePreferences((s) => s.hydrate);
   const [login, setLogin] = useState("");
@@ -46,6 +51,11 @@ export function LoginPage() {
 
   return (
     <AuthShell title="Log in">
+      {notice ? (
+        <p className="success-text" role="status">
+          {notice}
+        </p>
+      ) : null}
       <form className="setup-form" onSubmit={onSubmit} noValidate>
         <Field
           id="login"
@@ -71,10 +81,6 @@ export function LoginPage() {
         <Link to="/forgot-password">Forgot password?</Link>
         {" · "}
         <Link to="/signup">Sign up</Link>
-        <span className="meter">
-          {" "}
-          (learner sign-up opens after an admin configures email)
-        </span>
       </p>
     </AuthShell>
   );
