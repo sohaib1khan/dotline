@@ -1,0 +1,9 @@
+---
+description: Dotline project basics
+alwaysApply: true
+---
+- Dotline teaches braille (English UEB Grade 1) and cursive to low-vision beginners.
+- blueprint.md is the source of truth. Build only the phase requested. Never commit blueprint.md.
+- Backend: FastAPI + SQLAlchemy + Alembic + Postgres. Frontend: React + Vite + TypeScript + Tailwind + React Three Fiber.
+- One app container with one published port from DOTLINE_PORT. The db container has no published port.
+- At the end of each phase, summarize what was built, files changed, and how to test.

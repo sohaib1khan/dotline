@@ -1,0 +1,9 @@
+---
+description: Layout rules
+alwaysApply: true
+---
+- App shell with fixed nav and one main panel sized to 100dvh. No page-level vertical scrolling.
+- Content that does not fit becomes tabs, steps, cards, or pagination.
+- Phone (<768px): bottom nav. Larger: side nav.
+- Must work from 360px wide to 3440px wide. Use extra width for side panels, not stretched content.
+- Use safe-area insets for notched phones.

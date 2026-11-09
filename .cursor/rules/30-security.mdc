@@ -1,0 +1,11 @@
+---
+description: Security rules
+alwaysApply: true
+---
+- Never hardcode secrets, keys, passwords, or tokens. Read from environment via config.py.
+- Only .env.example (placeholder values) is committed.
+- Hash passwords with argon2. Sessions in httpOnly Secure SameSite=Lax cookies. CSRF on all state-changing requests.
+- Validate every input server-side with Pydantic. Enforce roles on the server.
+- Encrypt stored third-party API keys with Fernet (APP_ENCRYPTION_KEY). Never return them to the client; return a masked value only.
+- Rate-limit auth, signup, reset, and bug-report endpoints.
+- Award XP and badges only on the server.

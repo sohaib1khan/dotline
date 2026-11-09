@@ -1,0 +1,13 @@
+---
+description: Accessibility rules for all UI
+alwaysApply: true
+---
+- Every interactive element: keyboard accessible, visible focus outline (min 3px), accessible name.
+- Base font 20px; UI must work at 400% zoom. Use Atkinson Hyperlegible.
+- Body text contrast at least 7:1 in every theme.
+- Never use color alone; pair with icon, text, and sound.
+- Every sound cue has a visual equivalent and vice versa.
+- Instructions and feedback are bold and prominent, never small muted text.
+- Respect prefers-reduced-motion and the app's reduce-motion and reduced-visuals settings. With reduced visuals, all 3D falls back to 2D with no lost content.
+- Hit targets at least 48x48px.
+- Trigger feedback only through the shared feedback API (src/feedback), never raw audio/vibration calls in features.

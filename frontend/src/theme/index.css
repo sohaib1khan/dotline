@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-surface: #0b1220;
+  --color-ink: #f4f7fb;
+  --color-accent: #2dd4bf;
+  --color-muted: #c5d0de;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+  font-size: 20px;
+  line-height: 1.45;
+  background: radial-gradient(circle at top, #132033 0%, var(--color-surface) 55%);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.app-shell {
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}
+
+.main-panel {
+  width: min(100%, 40rem);
+  text-align: center;
+}
+
+.brand {
+  margin: 0 0 0.75rem;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-accent);
+}
+
+.status {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}

@@ -1,0 +1,10 @@
+---
+description: Code style
+alwaysApply: true
+---
+- Small focused files; one responsibility per module.
+- TypeScript strict mode. Python type hints everywhere.
+- Business logic lives in backend/app/services, not routers.
+- Features talk to devices only through src/input and src/feedback abstractions.
+- No dead code, no commented-out code, no fake/stubbed features presented as complete.
+- Add or update tests for any backend logic you change.
