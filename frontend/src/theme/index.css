@@ -1135,3 +1135,108 @@ kbd {
   gap: 0.5rem;
   margin: 0.75rem 0 1rem;
 }
+
+.monitoring-page {
+  min-height: 0;
+}
+
+.monitor-grid {
+  margin-top: 1rem;
+}
+
+.monitor-widget {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.35rem;
+  height: 100%;
+  border: 2px solid var(--color-border);
+  border-radius: 0.85rem;
+  background: var(--color-panel);
+  padding: 0.5rem;
+  overflow: auto;
+}
+
+.monitor-widget-body {
+  min-height: 0;
+  overflow: auto;
+}
+
+.monitor-widget h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.monitor-stat {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+}
+
+.monitor-drag {
+  justify-self: start;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.75rem;
+  cursor: grab;
+}
+
+.bar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.bar-row {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.bar-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-weight: 700;
+}
+
+.bar-track {
+  height: 0.85rem;
+  border: 2px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-surface-2);
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+}
+
+.login-table-wrap {
+  margin-top: 1rem;
+  max-height: min(55dvh, 28rem);
+  overflow: auto;
+  border: 2px solid var(--color-border);
+  border-radius: 0.75rem;
+}
+
+.login-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-weight: 700;
+}
+
+.login-table th,
+.login-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.login-table th {
+  position: sticky;
+  top: 0;
+  background: var(--color-panel);
+}

@@ -2,12 +2,15 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppFrame } from "@/app/AppFrame";
 import { Bootstrap } from "@/app/Bootstrap";
 import { RequireAuth } from "@/app/RequireAuth";
+import { HeartbeatBridge } from "@/components/HeartbeatBridge";
 import { TelemetryBridge } from "@/components/TelemetryBridge";
 import { AdminAnnouncementsPage } from "@/pages/AdminAnnouncementsPage";
 import { AdminBugsPage } from "@/pages/AdminBugsPage";
 import { AdminContentPage } from "@/pages/AdminContentPage";
 import { AdminDashboardPage } from "@/pages/AdminDashboardPage";
 import { AdminEmailSettingsPage } from "@/pages/AdminEmailSettingsPage";
+import { AdminLoginLogPage } from "@/pages/AdminLoginLogPage";
+import { AdminMonitoringPage } from "@/pages/AdminMonitoringPage";
 import { AdminSettingsHubPage } from "@/pages/AdminSettingsHubPage";
 import { AdminUsersPage } from "@/pages/AdminUsersPage";
 import { AdminXpDebugPage } from "@/pages/AdminXpDebugPage";
@@ -31,7 +34,6 @@ import { SetupPage } from "@/pages/SetupPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { SignatureStudioPage } from "@/pages/SignatureStudioPage";
 import { StatusboardPage } from "@/pages/StatusboardPage";
-import { StubPage } from "@/pages/StubPage";
 import { TracksPage } from "@/pages/TracksPage";
 import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
 
@@ -40,6 +42,7 @@ export function App() {
     <BrowserRouter>
       <Bootstrap>
         <TelemetryBridge />
+        <HeartbeatBridge />
         <Routes>
           <Route path="/" element={<EntryGatePage />} />
           <Route path="/setup" element={<SetupPage />} />
@@ -70,10 +73,8 @@ export function App() {
           <Route element={<RequireAuth role="admin" />}>
             <Route element={<AppFrame mode="admin" />}>
               <Route path="/admin" element={<AdminDashboardPage />} />
-              <Route
-                path="/admin/monitoring"
-                element={<StubPage title="Monitoring" copy="Monitoring arrives in Phase 13." />}
-              />
+              <Route path="/admin/monitoring" element={<AdminMonitoringPage />} />
+              <Route path="/admin/monitoring/logins" element={<AdminLoginLogPage />} />
               <Route path="/admin/users" element={<AdminUsersPage />} />
               <Route path="/admin/content" element={<AdminContentPage />} />
               <Route path="/admin/bugs" element={<AdminBugsPage />} />
