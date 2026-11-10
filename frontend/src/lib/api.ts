@@ -75,6 +75,14 @@ export async function apiPut<T>(path: string, body: unknown): Promise<T> {
   return apiSend<T>("PUT", path, body);
 }
 
+export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
+  return apiSend<T>("PATCH", path, body);
+}
+
+export async function apiDelete<T>(path: string, body?: unknown): Promise<T> {
+  return apiSend<T>("DELETE", path, body);
+}
+
 /** Multipart POST (do not set Content-Type — browser sets boundary). */
 export async function apiUploadForm<T>(path: string, form: FormData): Promise<T> {
   const csrf = await ensureCsrf();

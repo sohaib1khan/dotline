@@ -14,6 +14,7 @@ def test_activity_and_monitoring_routes_registered() -> None:
     assert "/api/admin/monitoring" in paths
     assert "/api/admin/monitoring/layout" in paths
     assert "/api/admin/login-events" in paths
+    assert "/api/admin/login-events/purge" in paths
 
 
 def test_heartbeat_caps_and_session_gap() -> None:

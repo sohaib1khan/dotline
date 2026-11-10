@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { ApiError, apiGet, apiPost } from "@/lib/api";
+import { Link } from "react-router-dom";
+import { ApiError, apiDelete, apiGet, apiPost } from "@/lib/api";
 
 type UserSummary = {
   id: string;
@@ -315,10 +316,72 @@ export function AdminUsersPage() {
               </div>
 
               <h3 className="field-label">Recent logins</h3>
+              <div className="cta-row" style={{ justifyContent: "flex-start" }}>
+                <Link
+                  className="secondary-button link-button"
+                  to={`/admin/monitoring/logins?q=${encodeURIComponent(detail.email)}`}
+                >
+                  Open login log
+                </Link>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  disabled={busy || detail.login_history.length === 0}
+                  onClick={() =>
+                    void (async () => {
+                      setBusy(true);
+                      setError("");
+                      try {
+                        const result = await apiPost<{ deleted: number }>(
+                          "/api/admin/login-events/purge",
+                          { success: "all", user_id: detail.id },
+                        );
+                        setMessage(`Cleared ${result.deleted} login event(s) for this user.`);
+                        await openUser(detail.id);
+                      } catch (err) {
+                        setError(err instanceof ApiError ? err.message : "Could not clear logins.");
+                      } finally {
+                        setBusy(false);
+                      }
+                    })()
+                  }
+                >
+                  Clear this user’s logins
+                </button>
+              </div>
               <ul className="plain-list">
+                {detail.login_history.length === 0 ? <li>None</li> : null}
                 {detail.login_history.slice(0, 8).map((row) => (
                   <li key={row.id}>
-                    {row.success ? "OK" : "FAIL"} · {row.created_at} · {row.ip ?? "—"}
+                    <div className="cta-row" style={{ justifyContent: "flex-start", gap: "0.75rem" }}>
+                      <span>
+                        {row.success ? "OK" : "FAIL"} · {row.created_at} · {row.ip ?? "—"}
+                      </span>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        disabled={busy}
+                        onClick={() =>
+                          void (async () => {
+                            setBusy(true);
+                            setError("");
+                            try {
+                              await apiDelete(`/api/admin/login-events/${row.id}`);
+                              setMessage("Login event deleted.");
+                              await openUser(detail.id);
+                            } catch (err) {
+                              setError(
+                                err instanceof ApiError ? err.message : "Could not delete login.",
+                              );
+                            } finally {
+                              setBusy(false);
+                            }
+                          })()
+                        }
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>

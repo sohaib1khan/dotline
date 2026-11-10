@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import date
 from typing import Any, Literal
 
@@ -11,9 +12,19 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models.user import User
 from app.schemas.auth import MessageResponse
-from app.schemas.monitoring import LayoutResponse, LayoutSaveRequest, LoginSearchResponse
+from app.schemas.monitoring import (
+    LayoutResponse,
+    LayoutSaveRequest,
+    LoginEventCreateRequest,
+    LoginEventPublic,
+    LoginEventPurgeRequest,
+    LoginEventPurgeResponse,
+    LoginEventUpdateRequest,
+    LoginSearchResponse,
+)
 from app.security.deps import require_admin, require_csrf
 from app.services import activity as activity_service
+from app.services import login_events as login_events_service
 from app.services import monitoring as monitoring_service
 
 router = APIRouter(prefix="/api/admin", tags=["admin-monitoring"])
@@ -88,3 +99,93 @@ def login_events(
             page_size=page_size,
         )
     )
+
+
+@router.post(
+    "/login-events",
+    response_model=LoginEventPublic,
+    dependencies=[Depends(require_csrf)],
+)
+def create_login_event(
+    payload: LoginEventCreateRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> LoginEventPublic:
+    return LoginEventPublic(
+        **login_events_service.create_login_event(
+            db,
+            email_attempted=payload.email_attempted,
+            success=payload.success,
+            ip=payload.ip,
+            device_summary=payload.device_summary,
+            user_id=payload.user_id,
+        )
+    )
+
+
+@router.post(
+    "/login-events/purge",
+    response_model=LoginEventPurgeResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def purge_login_events(
+    payload: LoginEventPurgeRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> LoginEventPurgeResponse:
+    return LoginEventPurgeResponse(
+        **login_events_service.purge_login_events(
+            db,
+            success=payload.success,
+            older_than_days=payload.older_than_days,
+            user_id=payload.user_id,
+        )
+    )
+
+
+@router.get("/login-events/{event_id}", response_model=LoginEventPublic)
+def get_login_event(
+    event_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> LoginEventPublic:
+    return LoginEventPublic(**login_events_service.get_login_event(db, event_id))
+
+
+@router.patch(
+    "/login-events/{event_id}",
+    response_model=LoginEventPublic,
+    dependencies=[Depends(require_csrf)],
+)
+def update_login_event(
+    event_id: uuid.UUID,
+    payload: LoginEventUpdateRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> LoginEventPublic:
+    return LoginEventPublic(
+        **login_events_service.update_login_event(
+            db,
+            event_id,
+            email_attempted=payload.email_attempted,
+            success=payload.success,
+            ip=payload.ip,
+            device_summary=payload.device_summary,
+            clear_ip=payload.clear_ip,
+            clear_device_summary=payload.clear_device_summary,
+        )
+    )
+
+
+@router.delete(
+    "/login-events/{event_id}",
+    response_model=MessageResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def delete_login_event(
+    event_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> MessageResponse:
+    login_events_service.delete_login_event(db, event_id)
+    return MessageResponse(message="Login event deleted.")
