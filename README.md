@@ -28,33 +28,38 @@ Self-hosted Progressive Web App. Open source. Runs in Docker.
 ```bash
 git clone https://github.com/sohaib1khan/dotline.git
 cd dotline
-./scripts/bootstrap.sh --url https://dotline.example.com
+./scripts/bootstrap.sh
 ```
 
-That script:
+That is the full first-run path: secrets, containers, health check. Then open:
 
-1. Creates `.env` from `.env.example` if needed
-2. Generates `SECRET_KEY`, `APP_ENCRYPTION_KEY`, and `POSTGRES_PASSWORD` (skips keys that are already set)
-3. Sets `PUBLIC_BASE_URL` from `--url`
-4. Runs `docker compose up -d --build` and waits for `/api/health`
+`http://SERVER_IP:47391/setup`
 
-Useful flags:
+Create the admin and log in. No domain required yet.
+
+### Later: Nginx Proxy Manager + HTTPS
+
+1. Proxy NPM to `http://host:47391` (or your `DOTLINE_PORT`)
+2. Set the real URL in `.env`:
 
 ```bash
-./scripts/bootstrap.sh --url https://dotline.example.com --port 47391
-./scripts/bootstrap.sh --env-only --url https://dotline.example.com   # write .env only
-./scripts/bootstrap.sh --force-secrets                               # rotate app secrets (not DB password)
-./scripts/bootstrap.sh --reset-db --url https://dotline.example.com   # wipe volumes + new DB password (destroys data)
+PUBLIC_BASE_URL=https://your.domain
+docker compose up -d
 ```
 
-Postgres only reads `POSTGRES_PASSWORD` on first volume init. If you already ran Compose once with `change_me`, rotating that value in `.env` alone causes `password authentication failed`. Use `--reset-db` for a clean re-init, or put the original password back.
+Email links and Secure cookies then follow that HTTPS URL. Until then, leave `PUBLIC_BASE_URL=http://localhost:47391` so LAN HTTP login works.
 
-Then open `/setup` to create the first admin (empty DB redirects there automatically).
+### Bootstrap flags
 
-- Health: `/api/health`
-- The Postgres container has **no published host port**
+```bash
+./scripts/bootstrap.sh --port 47391
+./scripts/bootstrap.sh --env-only          # write .env only
+./scripts/bootstrap.sh --force-secrets    # rotate app secrets (not DB password)
+./scripts/bootstrap.sh --reset-db         # wipe volumes + new DB password (destroys data)
+./scripts/bootstrap.sh --url https://your.domain   # optional, when HTTPS is ready
+```
 
-Point Nginx Proxy Manager (or similar) at `host:${DOTLINE_PORT}`.
+Postgres only reads `POSTGRES_PASSWORD` on first volume init. If auth fails after rotating that password, run `./scripts/bootstrap.sh --reset-db` (destroys data) or restore the original password.
 
 ## Roles
 

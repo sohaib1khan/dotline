@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError, apiGet, apiPost } from "@/lib/api";
+import { ApiError, apiGet, apiPost, clearCsrf } from "@/lib/api";
 import type { MeResponse, UserSettings } from "@/lib/types";
 import { useAuth } from "@/store/auth";
 import { usePreferences } from "@/store/preferences";
@@ -83,14 +83,23 @@ export function SetupPage() {
         password,
         confirm_password: confirmPassword,
       });
-      const me = await apiGet<MeResponse>("/api/auth/me");
-      setUser(me.user);
+      clearCsrf();
       try {
-        hydrate(await apiGet<UserSettings>("/api/me/settings"));
+        const me = await apiGet<MeResponse>("/api/auth/me");
+        setUser(me.user);
+        try {
+          hydrate(await apiGet<UserSettings>("/api/me/settings"));
+        } catch {
+          // Keep defaults.
+        }
+        navigate(result.redirect_to);
       } catch {
-        // Keep defaults.
+        // Session cookie may be blocked (e.g. Secure over HTTP) — fall back to login.
+        navigate("/login", {
+          replace: true,
+          state: { notice: "Admin created. Log in with the account you just made." },
+        });
       }
-      navigate(result.redirect_to);
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
         setGone(true);

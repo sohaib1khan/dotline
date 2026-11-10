@@ -1,7 +1,9 @@
 """Application settings loaded from environment variables."""
 
 from functools import lru_cache
+from typing import Any
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,8 +14,18 @@ class Settings(BaseSettings):
 
     app_env: str = "production"
     public_base_url: str = "http://localhost:47391"
+    # None = derive from public_base_url (https + real host → Secure cookies).
+    # Set false for LAN HTTP; true once Nginx Proxy Manager serves HTTPS.
+    cookie_secure: bool | None = None
     secret_key: str = "change_me_long_random_string"
     app_encryption_key: str = "change_me_fernet_key"
+
+    @field_validator("cookie_secure", mode="before")
+    @classmethod
+    def _empty_cookie_secure(cls, value: Any) -> Any:
+        if value == "" or value is None:
+            return None
+        return value
 
     postgres_db: str = "dotline"
     postgres_user: str = "dotline"

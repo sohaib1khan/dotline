@@ -37,6 +37,15 @@ export async function apiSend<T>(
   path: string,
   body?: unknown,
 ): Promise<T> {
+  return sendWithCsrfRetry(method, path, body);
+}
+
+async function sendWithCsrfRetry<T>(
+  method: "POST" | "PUT" | "PATCH" | "DELETE",
+  path: string,
+  body?: unknown,
+  retried = false,
+): Promise<T> {
   const csrf = await ensureCsrf();
   const response = await fetch(path, {
     method,
@@ -48,6 +57,13 @@ export async function apiSend<T>(
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+  if (!response.ok && !retried && response.status === 403) {
+    const text = await response.clone().text();
+    if (/csrf/i.test(text)) {
+      clearCsrf();
+      return sendWithCsrfRetry(method, path, body, true);
+    }
+  }
   return parseResponse<T>(response);
 }
 

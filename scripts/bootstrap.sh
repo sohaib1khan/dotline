@@ -20,7 +20,9 @@ Usage: scripts/bootstrap.sh [options]
 Create or refresh .env with real secrets, then start Dotline with Docker Compose.
 
 Options:
-  --url URL           Set PUBLIC_BASE_URL (e.g. https://dotline.example.com)
+  --url URL           Optional. Set PUBLIC_BASE_URL now (e.g. https://dotline.example.com).
+                      Omit for first run — defaults to http://localhost:PORT so LAN HTTP
+                      login works; set the real HTTPS URL later behind Nginx Proxy Manager.
   --port N            Set DOTLINE_PORT (default from .env.example, usually 47391)
   --env-only          Write/update .env only; do not run docker compose
   --force-secrets     Regenerate SECRET_KEY and APP_ENCRYPTION_KEY even if set.
@@ -232,20 +234,6 @@ else
   echo "Kept existing POSTGRES_PASSWORD"
 fi
 
-PUBLIC_BASE_URL_VALUE="${PUBLIC_BASE_URL_ARG:-${PUBLIC_BASE_URL:-}}"
-if [[ -n "$PUBLIC_BASE_URL_VALUE" ]]; then
-  env_set PUBLIC_BASE_URL "$PUBLIC_BASE_URL_VALUE"
-  echo "Set PUBLIC_BASE_URL=$PUBLIC_BASE_URL_VALUE"
-else
-  current_url="$(env_get PUBLIC_BASE_URL)"
-  if is_placeholder "$current_url" || [[ "$current_url" == *"example.com"* ]]; then
-    echo "Warning: PUBLIC_BASE_URL is still a placeholder ($current_url)." >&2
-    echo "         Pass --url https://your.domain or set it in $ENV_FILE." >&2
-  else
-    echo "Kept PUBLIC_BASE_URL=$current_url"
-  fi
-fi
-
 if [[ -n "${DOTLINE_PORT_ARG:-${DOTLINE_PORT:-}}" ]]; then
   port_value="${DOTLINE_PORT_ARG:-$DOTLINE_PORT}"
   env_set DOTLINE_PORT "$port_value"
@@ -254,6 +242,23 @@ fi
 
 final_port="$(env_get DOTLINE_PORT)"
 final_port="${final_port:-47391}"
+default_local_url="http://localhost:${final_port}"
+
+PUBLIC_BASE_URL_VALUE="${PUBLIC_BASE_URL_ARG:-${PUBLIC_BASE_URL:-}}"
+if [[ -n "$PUBLIC_BASE_URL_VALUE" ]]; then
+  env_set PUBLIC_BASE_URL "$PUBLIC_BASE_URL_VALUE"
+  echo "Set PUBLIC_BASE_URL=$PUBLIC_BASE_URL_VALUE"
+else
+  current_url="$(env_get PUBLIC_BASE_URL)"
+  # Placeholder / example HTTPS URLs force Secure cookies and break LAN HTTP login.
+  if is_placeholder "$current_url" || [[ "$current_url" == *"example.com"* ]] || [[ -z "$current_url" ]]; then
+    env_set PUBLIC_BASE_URL "$default_local_url"
+    echo "Set PUBLIC_BASE_URL=$default_local_url (set --url later for Nginx Proxy Manager)"
+  else
+    echo "Kept PUBLIC_BASE_URL=$current_url"
+  fi
+fi
+
 final_url="$(env_get PUBLIC_BASE_URL)"
 
 if [[ "$SKIP_COMPOSE" -eq 1 ]]; then

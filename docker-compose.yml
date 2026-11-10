@@ -24,6 +24,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-production}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:47391}
+      COOKIE_SECURE: ${COOKIE_SECURE:-}
       SECRET_KEY: ${SECRET_KEY:-change_me_long_random_string}
       APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-change_me_fernet_key}
       CONTENT_DATA_DIR: /app/data/content
