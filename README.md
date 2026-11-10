@@ -37,17 +37,33 @@ That is the full first-run path: secrets, containers, health check. Then open:
 
 Create the admin and log in. No domain required yet.
 
+Persistent data lives next to the project:
+
+```text
+./data/postgres   # database
+./data/app        # imported content overlay
+```
+
+### Full reset
+
+```bash
+./scripts/bootstrap.sh --reset-db
+```
+
+Stops containers, deletes `./data/*`, rotates secrets, and brings the stack back up for a clean `/setup`.
+
 ### Later: Nginx Proxy Manager + HTTPS
 
 1. Proxy NPM to `http://host:47391` (or your `DOTLINE_PORT`)
-2. Set the real URL in `.env`:
+2. Set the real URL in `.env` and enable Secure cookies:
 
 ```bash
 PUBLIC_BASE_URL=https://your.domain
+COOKIE_SECURE=true
 docker compose up -d
 ```
 
-Email links and Secure cookies then follow that HTTPS URL. Until then, leave `PUBLIC_BASE_URL=http://localhost:47391` so LAN HTTP login works.
+Until then keep `COOKIE_SECURE=false` so login works over `http://LAN-IP`.
 
 ### Bootstrap flags
 
@@ -55,11 +71,9 @@ Email links and Secure cookies then follow that HTTPS URL. Until then, leave `PU
 ./scripts/bootstrap.sh --port 47391
 ./scripts/bootstrap.sh --env-only          # write .env only
 ./scripts/bootstrap.sh --force-secrets    # rotate app secrets (not DB password)
-./scripts/bootstrap.sh --reset-db         # wipe volumes + new DB password (destroys data)
+./scripts/bootstrap.sh --reset-db         # wipe ./data + new secrets (destroys data)
 ./scripts/bootstrap.sh --url https://your.domain   # optional, when HTTPS is ready
 ```
-
-Postgres only reads `POSTGRES_PASSWORD` on first volume init. If auth fails after rotating that password, run `./scripts/bootstrap.sh --reset-db` (destroys data) or restore the original password.
 
 ## Roles
 

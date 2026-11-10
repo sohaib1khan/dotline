@@ -1,7 +1,5 @@
 """Cookie policy helpers for session and CSRF cookies."""
 
-from urllib.parse import urlparse
-
 from app.config import get_settings
 
 SESSION_COOKIE = "dotline_session"
@@ -11,26 +9,14 @@ CSRF_COOKIE = "dotline_csrf"
 def cookie_secure() -> bool:
     """Whether Set-Cookie should include Secure.
 
-    Browsers drop Secure cookies on plain HTTP. Self-hosters often open the app
-    at http://lan-ip:port before Nginx Proxy Manager / HTTPS is ready, so we must
-    not force Secure merely because .env.example used an https:// placeholder.
+    Default is off so self-hosters can use http://LAN-IP:port before Nginx Proxy
+    Manager. Turn on explicitly with COOKIE_SECURE=true once the public URL is HTTPS.
+    Browsers drop Secure cookies on plain HTTP, which surfaces as "CSRF token missing".
     """
     settings = get_settings()
     if settings.cookie_secure is not None:
-        return settings.cookie_secure
-    if settings.app_env == "development":
-        return False
-
-    raw = (settings.public_base_url or "").strip()
-    if not raw.lower().startswith("https://"):
-        return False
-
-    host = (urlparse(raw).hostname or "").lower()
-    if not host or host in {"localhost", "127.0.0.1", "::1"}:
-        return False
-    if host == "example.com" or host.endswith(".example.com"):
-        return False
-    return True
+        return bool(settings.cookie_secure)
+    return False
 
 
 def session_cookie_kwargs(*, max_age: int) -> dict:

@@ -6,7 +6,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-dotline}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # Persist next to the compose file so backups/resets are obvious.
+      - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dotline} -d ${POSTGRES_DB:-dotline}"]
       interval: 5s
@@ -24,7 +25,8 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-production}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:47391}
-      COOKIE_SECURE: ${COOKIE_SECURE:-}
+      # Default false so LAN HTTP works. Set true only after HTTPS (NPM) is live.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       SECRET_KEY: ${SECRET_KEY:-change_me_long_random_string}
       APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-change_me_fernet_key}
       CONTENT_DATA_DIR: /app/data/content
@@ -34,12 +36,8 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
     volumes:
-      - app_data:/app/data
+      - ./data/app:/app/data
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
-
-volumes:
-  postgres_data:
-  app_data:

@@ -28,8 +28,9 @@ Options:
   --force-secrets     Regenerate SECRET_KEY and APP_ENCRYPTION_KEY even if set.
                       Does not change POSTGRES_PASSWORD unless --reset-db is also
                       passed (Postgres keeps the password from first volume init).
-  --reset-db          Wipe Postgres/app Docker volumes, then generate a new
-                      POSTGRES_PASSWORD. Destroys all Dotline data.
+  --reset-db          Stop containers, delete ./data/postgres + ./data/app (and any
+                      leftover named volumes), then generate a new POSTGRES_PASSWORD.
+                      Destroys all Dotline data.
   -h, --help          Show this help
 
 Environment:
@@ -195,7 +196,11 @@ compose_project_name() {
   printf '%s' "$name" | tr '[:upper:]' '[:lower:]'
 }
 
-postgres_volume_exists() {
+postgres_data_exists() {
+  # Bind-mounted data next to compose, or leftover named volume from older installs.
+  if [[ -f "$ROOT/data/postgres/PG_VERSION" ]] || [[ -d "$ROOT/data/postgres/base" ]]; then
+    return 0
+  fi
   command -v docker >/dev/null 2>&1 || return 1
   local project
   project="$(compose_project_name)"
@@ -203,29 +208,48 @@ postgres_volume_exists() {
   docker volume inspect "${project}_postgres_data" >/dev/null 2>&1
 }
 
+wipe_dotline_data() {
+  echo "Stopping containers..."
+  docker compose down --remove-orphans >/dev/null 2>&1 || true
+
+  echo "Removing ./data/postgres and ./data/app ..."
+  rm -rf "$ROOT/data/postgres" "$ROOT/data/app"
+
+  # Older installs used named volumes — remove those too if present.
+  local project
+  project="$(compose_project_name)"
+  if [[ -n "$project" ]]; then
+    docker volume rm "${project}_postgres_data" "${project}_app_data" >/dev/null 2>&1 || true
+  fi
+  # compose down -v in case project name differs
+  docker compose down -v --remove-orphans >/dev/null 2>&1 || true
+}
+
+if [[ "$RESET_DB" -eq 1 ]]; then
+  FORCE_SECRETS=1
+fi
+
 ensure_secret SECRET_KEY gen_secret
 ensure_secret APP_ENCRYPTION_KEY gen_fernet
 
-# Postgres only applies POSTGRES_PASSWORD on first volume init. Changing .env later
-# without wiping the volume causes "password authentication failed".
+# Postgres only applies POSTGRES_PASSWORD on first data init. Changing .env later
+# without wiping ./data/postgres causes "password authentication failed".
 pg_pass_current="$(env_get POSTGRES_PASSWORD)"
-volume_present=0
-if postgres_volume_exists; then
-  volume_present=1
+data_present=0
+if postgres_data_exists; then
+  data_present=1
 fi
 
 if [[ "$RESET_DB" -eq 1 ]]; then
-  new_pg="$(gen_password)"
-  env_set POSTGRES_PASSWORD "$new_pg"
-  echo "Set POSTGRES_PASSWORD (will re-init after volume wipe)"
-elif [[ "$volume_present" -eq 1 ]]; then
+  env_set POSTGRES_PASSWORD "$(gen_password)"
+  echo "Set POSTGRES_PASSWORD (will re-init after data wipe)"
+elif [[ "$data_present" -eq 1 ]]; then
   if is_placeholder "$pg_pass_current"; then
-    echo "Warning: Postgres data volume already exists, but POSTGRES_PASSWORD still" >&2
-    echo "         looks like a placeholder. If the DB was first started with" >&2
-    echo "         change_me, keep that value — do not generate a new password." >&2
-    echo "         Or wipe and re-init: ./scripts/bootstrap.sh --reset-db --url ..." >&2
+    echo "Warning: Postgres data already exists under ./data/postgres (or an old" >&2
+    echo "         named volume), but POSTGRES_PASSWORD still looks like a placeholder." >&2
+    echo "         Keep the original password, or wipe with: ./scripts/bootstrap.sh --reset-db" >&2
   else
-    echo "Kept existing POSTGRES_PASSWORD (Postgres volume already initialized)"
+    echo "Kept existing POSTGRES_PASSWORD (Postgres data already initialized)"
   fi
 elif is_placeholder "$pg_pass_current" || [[ "$FORCE_SECRETS" -eq 1 ]]; then
   env_set POSTGRES_PASSWORD "$(gen_password)"
@@ -250,7 +274,6 @@ if [[ -n "$PUBLIC_BASE_URL_VALUE" ]]; then
   echo "Set PUBLIC_BASE_URL=$PUBLIC_BASE_URL_VALUE"
 else
   current_url="$(env_get PUBLIC_BASE_URL)"
-  # Placeholder / example HTTPS URLs force Secure cookies and break LAN HTTP login.
   if is_placeholder "$current_url" || [[ "$current_url" == *"example.com"* ]] || [[ -z "$current_url" ]]; then
     env_set PUBLIC_BASE_URL "$default_local_url"
     echo "Set PUBLIC_BASE_URL=$default_local_url (set --url later for Nginx Proxy Manager)"
@@ -261,9 +284,20 @@ fi
 
 final_url="$(env_get PUBLIC_BASE_URL)"
 
+# Secure cookies break plain HTTP (LAN IP). Only enable when the chosen URL is HTTPS.
+if [[ "${final_url}" == https://* ]]; then
+  env_set COOKIE_SECURE true
+  echo "Set COOKIE_SECURE=true (HTTPS URL)"
+else
+  env_set COOKIE_SECURE false
+  echo "Set COOKIE_SECURE=false (HTTP — required for LAN login / CSRF cookies)"
+fi
+
+mkdir -p "$ROOT/data/postgres" "$ROOT/data/app"
+
 if [[ "$SKIP_COMPOSE" -eq 1 ]]; then
   if [[ "$RESET_DB" -eq 1 ]]; then
-    echo "Note: --reset-db with --env-only only updated .env; volumes were not wiped." >&2
+    echo "Note: --reset-db with --env-only only updated .env; data was not wiped." >&2
   fi
   echo
   echo "Env ready. Start later with: docker compose up -d --build"
@@ -283,8 +317,8 @@ fi
 
 if [[ "$RESET_DB" -eq 1 ]]; then
   echo
-  echo "Wiping Dotline Docker volumes (Postgres + app data)..."
-  docker compose down -v
+  wipe_dotline_data
+  mkdir -p "$ROOT/data/postgres" "$ROOT/data/app"
 fi
 
 echo
@@ -294,7 +328,7 @@ docker compose up -d --build
 echo
 echo "Waiting for /api/health ..."
 ready=0
-for _ in $(seq 1 60); do
+for _ in $(seq 1 90); do
   if curl -fsS "http://127.0.0.1:${final_port}/api/health" >/dev/null 2>&1; then
     ready=1
     break
@@ -310,18 +344,18 @@ else
   if echo "$app_logs" | grep -qi 'password authentication failed'; then
     echo >&2
     echo "Postgres rejected the password in .env." >&2
-    echo "The DB volume was likely created with a different POSTGRES_PASSWORD earlier." >&2
-    echo "Fresh install (destroys data):" >&2
-    echo "  ./scripts/bootstrap.sh --reset-db --url ${final_url:-https://your.domain}" >&2
+    echo "Fresh install (destroys data): ./scripts/bootstrap.sh --reset-db" >&2
   else
     echo "Check: docker compose logs -f app" >&2
   fi
 fi
 
 echo
+echo "Data directory: $ROOT/data  (postgres/ + app/)"
 echo "Next: open the setup page and create the first admin."
+echo "  http://SERVER_IP:${final_port}/setup"
 echo "  http://localhost:${final_port}/setup"
-if [[ -n "$final_url" && "$final_url" != *"example.com"* ]]; then
+if [[ -n "$final_url" && "$final_url" != *"example.com"* && "$final_url" != http://localhost* ]]; then
   echo "  ${final_url%/}/setup"
 fi
 echo

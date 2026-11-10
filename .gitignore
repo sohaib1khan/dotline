@@ -34,7 +34,7 @@ logs/
 tmp/
 .cache/
 
-# Docker volumes / local data
+# Docker bind-mount data (created next to compose on bootstrap)
 data/
 postgres_data/
 *.sqlite3
