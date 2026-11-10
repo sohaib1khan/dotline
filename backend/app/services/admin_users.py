@@ -14,7 +14,6 @@ from app.models.activity import ActivityDaily
 from app.models.auth import LoginEvent
 from app.models.user import User, UserRole, UserTrack
 from app.security import sessions as session_service
-from app.services import auth as auth_service
 from app.services import bugs as bugs_service
 from app.services import progress as progress_service
 from app.services import tracks as track_service
@@ -151,20 +150,6 @@ def set_role(db: Session, admin: User, user_id: uuid.UUID, *, role: str) -> dict
     db.commit()
     db.refresh(user)
     return user_summary(user)
-
-
-def send_password_reset(db: Session, user_id: uuid.UUID) -> dict[str, str]:
-    user = get_user(db, user_id)
-    auth_service.request_password_reset(db, user.email)
-    return {"message": f"Password reset email queued for {user.email}."}
-
-
-def resend_verification(db: Session, user_id: uuid.UUID) -> dict[str, str]:
-    user = get_user(db, user_id)
-    if user.email_verified_at is not None:
-        return {"message": "Email is already verified."}
-    auth_service.send_verification_email(db, user)
-    return {"message": f"Verification email queued for {user.email}."}
 
 
 def reset_user_progress(

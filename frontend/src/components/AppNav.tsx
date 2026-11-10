@@ -9,7 +9,7 @@ type NavItem = { to: string; label: string; end?: boolean; badge?: boolean };
 
 const ADMIN_ITEMS: NavItem[] = [
   { to: "/admin", label: "Console", end: true },
-  { to: "/admin/settings", label: "Resend & settings" },
+  { to: "/admin/settings", label: "Settings" },
   { to: "/admin/content", label: "Course content" },
   { to: "/admin/users", label: "Users" },
   { to: "/admin/monitoring/logins", label: "Login log" },

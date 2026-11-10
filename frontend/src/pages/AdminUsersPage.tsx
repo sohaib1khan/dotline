@@ -239,34 +239,6 @@ export function AdminUsersPage() {
                   disabled={busy}
                   onClick={() =>
                     void runAction(
-                      `/api/admin/users/${detail.id}/password-reset`,
-                      {},
-                      "Password reset emailed.",
-                    )
-                  }
-                >
-                  Send password reset
-                </button>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  disabled={busy || Boolean(detail.email_verified_at)}
-                  onClick={() =>
-                    void runAction(
-                      `/api/admin/users/${detail.id}/resend-verification`,
-                      {},
-                      "Verification emailed.",
-                    )
-                  }
-                >
-                  Resend verification
-                </button>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  disabled={busy}
-                  onClick={() =>
-                    void runAction(
                       `/api/admin/users/${detail.id}/reset-progress`,
                       { scope: "everything", confirm: "RESET" },
                       "Progress reset.",

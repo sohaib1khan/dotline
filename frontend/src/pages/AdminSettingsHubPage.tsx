@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { AdminEmailPanel } from "@/components/AdminEmailPanel";
+import { ChangePasswordForm } from "@/components/ChangePasswordForm";
 import { ApiError, apiGet, apiPut } from "@/lib/api";
+import { useAuth } from "@/store/auth";
 
-type Tab = "general" | "signups" | "email";
+type Tab = "account" | "general" | "signups" | "email";
 
 type GeneralSettings = {
   app_name: string;
@@ -14,7 +16,8 @@ type GeneralSettings = {
 };
 
 export function AdminSettingsHubPage() {
-  const [tab, setTab] = useState<Tab>("email");
+  const user = useAuth((s) => s.user);
+  const [tab, setTab] = useState<Tab>("account");
   const [general, setGeneral] = useState<GeneralSettings | null>(null);
   const [signupsOpen, setSignupsOpen] = useState(true);
   const [error, setError] = useState("");
@@ -76,16 +79,17 @@ export function AdminSettingsHubPage() {
   return (
     <section aria-labelledby="admin-settings-title">
       <h1 id="admin-settings-title" className="page-title">
-        Resend & settings
+        Settings
       </h1>
       <p className="page-copy">
-        <strong>Admin configuration — not the learner practice UI.</strong> Set Resend, sign-ups, and
-        site defaults here. Changes apply right away.
+        <strong>Your admin account and site configuration.</strong> Change your password here, then
+        tune Resend, sign-ups, and site defaults. Changes apply right away.
       </p>
 
       <div className="settings-tabs" role="tablist" aria-label="Settings sections">
         {(
           [
+            ["account", "My password"],
             ["email", "Resend email"],
             ["general", "General"],
             ["signups", "Sign-ups"],
@@ -112,6 +116,15 @@ export function AdminSettingsHubPage() {
       {message ? (
         <div className="banner" role="status">
           <strong>{message}</strong>
+        </div>
+      ) : null}
+
+      {tab === "account" ? (
+        <div className="settings-form">
+          <p className="lede">
+            Signed in as <strong>{user?.email ?? user?.username}</strong>
+          </p>
+          <ChangePasswordForm onChanged={() => setMessage("Password updated.")} />
         </div>
       ) : null}
 

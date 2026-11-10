@@ -71,32 +71,6 @@ def set_role(
 
 
 @router.post(
-    "/{user_id}/password-reset",
-    response_model=MessageOnly,
-    dependencies=[Depends(require_csrf)],
-)
-def password_reset(
-    user_id: uuid.UUID,
-    db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
-) -> MessageOnly:
-    return MessageOnly(**users_service.send_password_reset(db, user_id))
-
-
-@router.post(
-    "/{user_id}/resend-verification",
-    response_model=MessageOnly,
-    dependencies=[Depends(require_csrf)],
-)
-def resend_verification(
-    user_id: uuid.UUID,
-    db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
-) -> MessageOnly:
-    return MessageOnly(**users_service.resend_verification(db, user_id))
-
-
-@router.post(
     "/{user_id}/reset-progress",
     response_model=MessageResponse,
     dependencies=[Depends(require_csrf)],

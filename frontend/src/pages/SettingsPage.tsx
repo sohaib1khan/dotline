@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { Field, FormStatus, type SubmitHandler } from "@/components/AuthForm";
+import { ChangePasswordForm } from "@/components/ChangePasswordForm";
 import { InstallAppCard } from "@/components/InstallAppCard";
 import { feedback, getConnectedGamepads, getVoices, setGamepadMapping } from "@/feedback";
 import { ApiError, apiGet, apiSend } from "@/lib/api";
@@ -9,10 +10,11 @@ import { useAuth } from "@/store/auth";
 import { usePreferences } from "@/store/preferences";
 import { TEXT_SCALE_OPTIONS, THEME_OPTIONS } from "@/theme/tokens";
 
-type Tab = "account" | "display" | "sound" | "haptics" | "handedness" | "tracks";
+type Tab = "account" | "password" | "display" | "sound" | "haptics" | "handedness" | "tracks";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "account", label: "Account" },
+  { id: "password", label: "Password" },
   { id: "display", label: "Display" },
   { id: "sound", label: "Sound & Speech" },
   { id: "haptics", label: "Haptics" },
@@ -100,9 +102,6 @@ export function SettingsPage() {
   const setSettings = usePreferences((s) => s.setSettings);
 
   const [username, setUsername] = useState(user?.username ?? "");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -156,18 +155,12 @@ export function SettingsPage() {
     setError("");
     setMessage("");
     try {
-      const body: Record<string, string> = {};
-      if (username && username !== user?.username) body.username = username;
-      if (newPassword) {
-        body.current_password = currentPassword;
-        body.new_password = newPassword;
-        body.confirm_password = confirmPassword;
+      if (!username || username === user?.username) {
+        setError("Change your username, or open the Password tab to update your password.");
+        return;
       }
-      const updated = await apiSend<UserPublic>("PATCH", "/api/me/account", body);
+      const updated = await apiSend<UserPublic>("PATCH", "/api/me/account", { username });
       setUser(updated);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
       setMessage("Account updated.");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not update account.");
@@ -217,38 +210,16 @@ export function SettingsPage() {
             onChange={setUsername}
             autoComplete="username"
           />
-          <Field
-            id="settings-current-password"
-            label="Current password"
-            type="password"
-            value={currentPassword}
-            onChange={setCurrentPassword}
-            autoComplete="current-password"
-            required={false}
-          />
-          <Field
-            id="settings-new-password"
-            label="New password"
-            type="password"
-            value={newPassword}
-            onChange={setNewPassword}
-            autoComplete="new-password"
-            required={false}
-          />
-          <Field
-            id="settings-confirm-password"
-            label="Confirm new password"
-            type="password"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            autoComplete="new-password"
-            required={false}
-          />
+          <p className="page-copy">
+            <strong>To change your password,</strong> use the Password tab.
+          </p>
           <button className="primary-button" type="submit" disabled={busy}>
-            Save account
+            Save username
           </button>
         </form>
       ) : null}
+
+      {tab === "password" ? <ChangePasswordForm /> : null}
 
       {tab === "display" ? (
         <form
